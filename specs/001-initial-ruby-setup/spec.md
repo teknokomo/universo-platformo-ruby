@@ -123,42 +123,66 @@ A user can manage clusters, which serve as the top-level organizational unit. Ea
 - **FR-002**: System MUST include GitHub issue labels following the conventions in `.github/instructions/github-labels.md`
 - **FR-003**: System MUST include a `.gitignore` file appropriate for the chosen technology stack
 - **FR-004**: Documentation MUST explain the project purpose, architecture, and setup instructions
+- **FR-005**: System MUST include GitHub Issue templates for common issue types (bug, feature, enhancement)
+- **FR-006**: System MUST include Pull Request templates with checklist for code review
+- **FR-007**: System MUST include GitHub Actions workflows for CI/CD (tests, linting, security scanning)
+- **FR-008**: System MUST include automated bilingual documentation verification to ensure line count parity
 
 #### Monorepo Structure
-- **FR-005**: System MUST organize code in a `packages/` directory
-- **FR-006**: System MUST separate frontend and backend code using `-frt` and `-srv` suffixes respectively
-- **FR-007**: Each package MUST contain a `base/` directory for core implementations to support future alternative implementations
-- **FR-008**: System MUST use a monorepo management solution that allows efficient dependency sharing
-- **FR-009**: System MUST allow packages to share common dependencies efficiently
+- **FR-009**: System MUST organize code in a `packages/` directory using Rails Engines
+- **FR-010**: System MUST separate frontend and backend code using `-frt` and `-srv` suffixes respectively
+- **FR-011**: Each package MUST contain a `base/` directory for core implementations to support future alternative implementations
+- **FR-012**: System MUST use Rails Engines for package management allowing efficient dependency sharing
+- **FR-013**: System MUST allow packages to share common dependencies efficiently through Bundler
+- **FR-014**: Each package MUST be structured to support future extraction as independent gem
+- **FR-015**: System MUST document package creation patterns including when to use 3-entity hierarchy, variations, and extensions
 
 #### Database Integration
-- **FR-010**: System MUST support connection to a cloud database service
-- **FR-011**: System MUST provide database configuration through environment variables
-- **FR-012**: System MUST abstract database operations to allow future support for other database systems
-- **FR-013**: System MUST handle database connection failures gracefully with appropriate error messages
+- **FR-016**: System MUST support connection to Supabase PostgreSQL database
+- **FR-017**: System MUST provide database configuration through environment variables
+- **FR-018**: System MUST abstract database operations to allow future support for other database systems
+- **FR-019**: System MUST handle database connection failures gracefully with appropriate error messages
+- **FR-020**: System MUST use database migrations for all schema changes with proper version control
 
 #### Authentication
-- **FR-014**: System MUST integrate with a cloud authentication service
-- **FR-015**: System MUST provide user registration functionality
-- **FR-016**: System MUST provide user login functionality
-- **FR-017**: System MUST maintain user sessions securely
-- **FR-018**: System MUST protect routes that require authentication
-- **FR-019**: System MUST provide appropriate feedback for authentication failures
+- **FR-021**: System MUST integrate with Supabase authentication service
+- **FR-022**: System MUST provide user registration functionality
+- **FR-023**: System MUST provide user login functionality
+- **FR-024**: System MUST maintain user sessions securely using industry-standard session management
+- **FR-025**: System MUST protect routes that require authentication
+- **FR-026**: System MUST provide appropriate feedback for authentication failures
+- **FR-027**: System MUST support JWT tokens for API authentication
 
 #### UI Framework
-- **FR-020**: System MUST integrate a UI component library
-- **FR-021**: UI components MUST follow Material Design principles
-- **FR-022**: System MUST provide consistent styling across all pages
-- **FR-023**: System MUST support responsive design for different screen sizes
+- **FR-028**: System MUST integrate Hotwire (Turbo + Stimulus) for reactive frontend
+- **FR-029**: System MUST integrate ViewComponent for reusable UI components
+- **FR-030**: System MUST integrate Tailwind CSS with Material Design theme
+- **FR-031**: UI components MUST follow Material Design principles
+- **FR-032**: System MUST provide consistent styling across all pages
+- **FR-033**: System MUST support responsive design for different screen sizes
 
 #### Clusters Functionality
-- **FR-024**: System MUST provide create, read, update, and delete operations for Clusters entities
-- **FR-025**: System MUST provide create, read, update, and delete operations for Domains entities
-- **FR-026**: System MUST provide create, read, update, and delete operations for Resources entities
-- **FR-027**: System MUST enforce hierarchical relationships: Clusters contain Domains, Domains contain Resources
-- **FR-028**: System MUST prevent deletion of Clusters that contain Domains
-- **FR-029**: System MUST prevent deletion of Domains that contain Resources
-- **FR-030**: System MUST display hierarchical relationships in the user interface
+- **FR-034**: System MUST provide create, read, update, and delete operations for Clusters entities
+- **FR-035**: System MUST provide create, read, update, and delete operations for Domains entities
+- **FR-036**: System MUST provide create, read, update, and delete operations for Resources entities
+- **FR-037**: System MUST enforce hierarchical relationships: Clusters contain Domains, Domains contain Resources
+- **FR-038**: System MUST prevent deletion of Clusters that contain Domains
+- **FR-039**: System MUST prevent deletion of Domains that contain Resources
+- **FR-040**: System MUST display hierarchical relationships in the user interface
+- **FR-041**: Clusters package MUST serve as reference implementation for future entity packages
+
+#### React Repository Tracking
+- **FR-042**: System MUST include documentation for monitoring React repository updates
+- **FR-043**: System MUST maintain feature parity tracking document comparing Ruby vs React implementations
+- **FR-044**: System MUST document process for translating React features to Ruby implementation
+- **FR-045**: System MUST document which React legacy patterns to avoid (Flowise code, unrefactored patterns)
+
+#### Package Architecture Guidelines
+- **FR-046**: System MUST document when to use full 3-entity hierarchy pattern (like Clusters)
+- **FR-047**: System MUST document when to use partial entity hierarchy
+- **FR-048**: System MUST document when to extend beyond 3-entity hierarchy
+- **FR-049**: System MUST provide package creation template and checklist
+- **FR-050**: System MUST document architectural extensibility for future features (Spaces/Canvases, node systems)
 
 ### Key Entities
 
@@ -169,6 +193,110 @@ A user can manage clusters, which serve as the top-level organizational unit. Ea
 - **Resource**: Lowest-level entity within the hierarchy. Contains attributes like name, type, configuration, and belongs to a single Domain.
 
 - **User**: Represents an authenticated user of the system. Contains credentials and profile information managed by the authentication service. Has permissions to perform operations on Clusters, Domains, and Resources.
+
+## Package Architecture Patterns *(new section)*
+
+### Three-Entity Hierarchy Pattern (Reference: Clusters)
+
+The Clusters package demonstrates the standard three-entity hierarchy pattern that serves as a template for similar features:
+
+**Structure:**
+- **Top Level** (Cluster): Container entity with basic attributes (name, description, timestamps)
+- **Middle Level** (Domain): Belongs to top-level, can contain bottom-level entities
+- **Bottom Level** (Resource): Belongs to middle-level, contains specific data/configuration
+
+**When to Use Full Pattern:**
+- Feature requires clear organizational hierarchy
+- Users need to group related items at multiple levels
+- Each level has distinct purpose and attributes
+- Examples: Clusters/Domains/Resources, Metaverses/Sections/Entities
+
+**Implementation Guidelines:**
+- Each level is a separate ActiveRecord model
+- Use `has_many :through` for cross-level relationships if needed
+- Implement soft delete with dependent: :destroy callbacks
+- Prevent deletion of parent entities with children
+- Use Rails nested routes for hierarchical URLs
+- Create separate controllers for each entity level
+- ViewComponents for consistent list/form rendering
+
+### Pattern Variations
+
+**Two-Entity Hierarchy:**
+- When middle level is unnecessary
+- Direct parent-child relationship
+- Example: Categories/Items
+
+**Extended Hierarchy (4+ levels):**
+- When additional organizational depth needed
+- Example: Uniks may have Users/Workspaces/Projects/Tasks/Subtasks
+- Consider UX complexity - deep hierarchies can confuse users
+- Use breadcrumb navigation and clear visual hierarchy
+
+**Single Entity with Tags/Categories:**
+- When hierarchy is flexible or user-defined
+- Use acts-as-taggable-on gem or similar
+- Example: Notes with tags
+
+### Future Architectural Extensibility
+
+**Node-Based Systems (for Spaces/Canvases):**
+The architecture must support future node-based visual programming features:
+
+- **Node Entity**: Represents a single operation/function in a graph
+- **Edge Entity**: Represents connections between nodes
+- **Canvas Entity**: Container for node graphs
+- **Node Types**: LangChain operations, UPDL custom nodes, data transformations
+- **Execution Engine**: Processes node graphs (future implementation)
+
+**Preparation Requirements:**
+- Package structure must support complex entity relationships
+- Database schema should allow JSON/JSONB for node configurations
+- Frontend must support dynamic component loading
+- Consider using Stimulus controllers for interactive node editing
+
+**Integration Points:**
+- Nodes can reference Clusters, Domains, Resources
+- Canvases belong to Spaces (future entity)
+- Results can be stored in Resources or separate output entities
+
+### Package Creation Checklist
+
+When creating a new package following an existing pattern:
+
+1. **Planning Phase:**
+   - [ ] Identify which pattern to use (3-entity, 2-entity, extended, or custom)
+   - [ ] Define entity relationships and attributes
+   - [ ] Review similar packages for consistency
+   - [ ] Check if package needs both -frt and -srv or just one
+
+2. **Structure Phase:**
+   - [ ] Create package directory: `packages/feature-name-srv/`
+   - [ ] Create `base/` subdirectory
+   - [ ] Generate Rails Engine: `rails plugin new --mountable`
+   - [ ] Add to main application Gemfile with path dependency
+
+3. **Implementation Phase:**
+   - [ ] Generate models with migrations
+   - [ ] Add validations and associations
+   - [ ] Generate controllers following REST conventions
+   - [ ] Create ViewComponents for UI elements
+   - [ ] Add RSpec tests (models, controllers, features)
+   - [ ] Implement soft delete if hierarchical
+
+4. **Documentation Phase:**
+   - [ ] Create README.md (English)
+   - [ ] Create README-RU.md (Russian, identical structure)
+   - [ ] Verify line count matches between versions
+   - [ ] Document API endpoints if applicable
+   - [ ] Add inline code comments for complex logic
+
+5. **Integration Phase:**
+   - [ ] Mount engine routes in main application
+   - [ ] Add navigation menu items
+   - [ ] Test integration with authentication
+   - [ ] Verify responsive design
+   - [ ] Run full test suite
 
 ## Success Criteria *(mandatory)*
 
@@ -186,17 +314,120 @@ A user can manage clusters, which serve as the top-level organizational unit. Ea
 - **SC-010**: UI components maintain visual consistency score of 95% across all pages (measured by design system compliance)
 - **SC-011**: Zero critical security vulnerabilities in authentication and database access layers
 - **SC-012**: Responsive design functions correctly across desktop (1920px), tablet (768px), and mobile (375px) viewports
+- **SC-013**: Bilingual documentation line count verification passes for all README pairs
+- **SC-014**: All CI/CD checks pass (tests, linting, security scanning) before merge
+- **SC-015**: Package creation following checklist takes less than 2 hours from start to fully tested
+
+## React Repository Tracking and Feature Parity *(new section)*
+
+### Monitoring Strategy
+
+**Weekly Review Process:**
+1. Check React repository for new commits and pull requests
+2. Review React Issues for planned features and bug fixes
+3. Identify features that should be ported to Ruby version
+4. Document decisions in tracking document
+
+**Tracking Document Location:**
+- `docs/FEATURE_PARITY.md` (create when first needed)
+- Sections: Implemented, In Progress, Planned, Not Applicable
+
+**What to Monitor:**
+- New packages added to React version
+- Changes to existing package functionality
+- UI/UX improvements
+- Bug fixes that apply to both implementations
+- Architecture changes that affect both versions
+
+### Feature Translation Process
+
+**When a React Feature is Identified for Porting:**
+
+1. **Analysis Phase:**
+   - Study React implementation (code, documentation, tests)
+   - Identify core functionality vs React-specific implementation
+   - Note any Flowise legacy code to avoid
+   - Document Ruby equivalent technologies
+
+2. **Specification Phase:**
+   - Create feature specification using `/speckit.specify`
+   - Reference React feature but focus on WHAT not HOW
+   - Adapt for Rails conventions and patterns
+   - Include bilingual documentation requirements
+
+3. **Implementation Phase:**
+   - Follow this project's package patterns
+   - Use Rails best practices, not React patterns
+   - Ensure test coverage matches or exceeds React version
+   - Document deviations and reasons
+
+4. **Verification Phase:**
+   - Compare functionality with React version
+   - Verify feature parity (not code parity)
+   - Update tracking document
+   - Cross-reference Issue numbers between repos if applicable
+
+### Legacy Code Avoidance
+
+**DO NOT Port from React Version:**
+
+1. **Flowise Legacy Code:**
+   - Unrefactored code from original Flowise project
+   - Look for TODO comments mentioning Flowise
+   - Check git history - if code predates Universo Platformo, be cautious
+
+2. **Architectural Debt:**
+   - Hard-coded configurations that should be environment variables
+   - Monolithic components that should be split
+   - Missing tests or test coverage gaps
+   - Inconsistent naming conventions
+
+3. **React-Specific Workarounds:**
+   - Solutions to React limitations that don't apply to Rails
+   - State management complexity unnecessary in server-rendered apps
+   - Client-side routing workarounds (Rails handles routing natively)
+
+**How to Identify Legacy Code:**
+- Check React repo git blame for file age
+- Look for comments mentioning "Flowise", "TODO: refactor", "legacy"
+- Compare with newer packages to see pattern differences
+- When in doubt, ask or design from scratch following Rails patterns
+
+### Feature Parity vs Code Parity
+
+**Remember:**
+- **Feature Parity**: Same functionality, user experience, capabilities ✅
+- **Code Parity**: Same code structure, libraries, patterns ❌
+
+**Goal is Feature Parity, NOT Code Parity:**
+- Ruby version should use Ruby/Rails best practices
+- UI may differ if Rails approach is better
+- Backend architecture will be different (Rails vs Express)
+- Database schema may differ while providing same functionality
+
+**Example:**
+- React: Uses React Router, React Context, Redux
+- Ruby: Uses Rails routing, sessions, ViewComponents
+- Both: Provide same user features and experience
 
 ## Assumptions
 
-### Technology Stack
+### Technology Stack (Definitive Choices)
 1. **Programming Language**: Ruby 3.2+ will be used as the primary language
 2. **Web Framework**: Rails 7.0+ will be used for web application functionality
-3. **Monorepo Tool**: Either Bundler with path dependencies or Rails Engine approach for package management
+3. **Monorepo Tool**: Rails Engines for package management with Bundler for dependency management
+   - Each package will be a Rails Engine in `packages/` directory
+   - Engines provide proper isolation and can be extracted to separate gems later
 4. **Database**: PostgreSQL as the underlying database due to cloud service compatibility
 5. **Database Service**: Supabase will be used as the cloud database and authentication provider
-6. **UI Framework**: ViewComponent or similar component framework with Tailwind CSS or Bootstrap for Material Design implementation
-7. **Authentication**: Supabase provides email/password authentication with session-based authentication in the web framework
+6. **UI Framework**: 
+   - Hotwire (Turbo + Stimulus) for reactive frontend
+   - ViewComponent for reusable UI components
+   - Tailwind CSS with custom Material Design theme for styling
+7. **Authentication**: 
+   - Supabase Auth for authentication backend
+   - Devise or custom session management for Rails integration
+   - JWT tokens for API authentication
 8. **Deployment**: Production deployment will be containerized (Docker) for consistency
 
 ### Project Conventions
@@ -204,37 +435,60 @@ A user can manage clusters, which serve as the top-level organizational unit. Ea
 10. **Package Naming**: English names for packages with Russian translations in documentation only
 11. **Version Control**: Git workflow with feature branches and pull requests as described in repository instructions
 12. **Data Deletion**: Soft deletion rather than hard deletion for entities with relationships to preserve data integrity
+13. **Code Quality**: RuboCop for style enforcement, Brakeman for security scanning, SimpleCov for coverage (minimum 80%)
+14. **Testing**: RSpec for all tests, FactoryBot for fixtures, Capybara for integration tests
 
 ## Dependencies
 
 1. **External Reference**: Universo Platformo React repository (https://github.com/teknokomo/universo-platformo-react) serves as the conceptual reference for architecture and feature set
+   - **Monitoring Strategy**: Weekly review of React repo for new features and updates
+   - **Feature Parity**: Maintain tracking document of implemented vs pending features
+   - **Legacy Code Awareness**: Do NOT port Flowise legacy code that hasn't been refactored in React version
 2. **Cloud Services**: Cloud database and authentication service account setup required before data persistence and user authentication can function
-3. **Language Runtime**: Programming language runtime and web framework installation required
-4. **UI Library**: Selection and integration of a UI component library
-5. **Documentation Tools**: Markdown rendering for README files
-6. **GitHub Configuration**: Repository access to create labels and configure issues/PRs
+3. **Language Runtime**: Ruby 3.2+ and Rails 7.0+ installation required
+4. **UI Library**: Hotwire, ViewComponent, and Tailwind CSS integration required
+5. **Documentation Tools**: Markdown rendering for README files with line count verification tooling
+6. **GitHub Configuration**: Repository access to create labels, issue templates, PR templates, and configure CI/CD workflows
+7. **Development Tools**: Docker for containerization, Git for version control, IDE with Ruby/Rails support
 
 ## Scope Boundaries
 
 ### In Scope
 - Repository initialization with proper documentation structure
-- Monorepo setup with package organization
+- Monorepo setup with Rails Engines package organization
+- GitHub repository configuration:
+  - Issue templates creation
+  - Pull request templates creation
+  - GitHub Actions CI/CD pipeline setup
+  - Security scanning (RuboCop, Brakeman, Bundler-audit) integration
+  - Automated testing workflow
 - Supabase database connection configuration
 - Supabase authentication integration
-- Basic UI framework integration
-- Core Clusters/Domains/Resources CRUD functionality
-- Bilingual (English/Russian) documentation
+- Hotwire + ViewComponent + Tailwind CSS framework integration
+- Core Clusters/Domains/Resources CRUD functionality as reference pattern
+- Package architecture documentation (when to use 3-entity pattern, variations)
+- Bilingual (English/Russian) documentation with verification process
 - Development environment setup documentation
+- Migration preparation (Engine structure supports future gem extraction)
 
 ### Out of Scope (Future Features)
 - Additional database system integrations (MySQL, MongoDB, etc.) - framework should be extensible but implementations are future work
-- Advanced Clusters features beyond basic CRUD
-- Other entity types (Metaverses, Sections, Uniks, etc.) - these follow same pattern and will be added in separate features
-- Spaces/Canvases functionality with node graphs for LangChain
-- Production deployment automation
-- Advanced authorization beyond basic authentication
-- API documentation and external API access
-- Internationalization beyond English/Russian (other languages are future work)
-- Performance optimization beyond basic requirements
-- Comprehensive monitoring and logging infrastructure
-- Advanced search and filtering capabilities
+- Advanced Clusters features beyond basic CRUD (covered in separate feature specs)
+- Other entity types (Metaverses/Sections/Entities, Uniks with extended hierarchy) - these follow same pattern and will be added in separate features
+- Spaces/Canvases functionality with node graphs for LangChain and UPDL nodes (architectural hints provided, full implementation is future work)
+- Production deployment automation and infrastructure as code
+- Advanced authorization beyond basic authentication (roles, permissions, policies)
+- API documentation with OpenAPI/Swagger
+- External API access for third-party integrations
+- Internationalization beyond English/Russian (additional languages are future work)
+- Performance optimization beyond basic requirements (caching, CDN, database optimization)
+- Comprehensive monitoring and logging infrastructure (APM, error tracking)
+- Advanced search and filtering capabilities (Elasticsearch, full-text search)
+
+### Must NOT Implement (Explicitly Excluded)
+- **docs/ folder**: Documentation will be in a separate repository (docs.universo.pro)
+- **AI agent configuration files**: User will create these manually as needed (.github/agents/ exists but no custom rules)
+- **React implementation flaws**: Do not copy over unrefactored code patterns from React version
+- **Flowise legacy code**: React version still contains legacy Flowise code - do NOT port this
+- **Hard-coded configurations**: All configuration must be through environment variables or database
+- **Monolithic architecture**: Maintain package separation even if harder initially

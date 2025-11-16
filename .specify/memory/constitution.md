@@ -3,38 +3,44 @@
 ║                        SYNC IMPACT REPORT                                     ║
 ╚══════════════════════════════════════════════════════════════════════════════╝
 
-VERSION CHANGE: Initial → 1.0.0
+VERSION CHANGE: 1.0.0 → 1.1.0
 
-RATIONALE: Initial constitution for Universo Platformo Ruby project. MINOR version 
-1.0.0 chosen as this represents the first stable governance framework.
+RATIONALE: Deep analysis of specification against original project goals revealed 
+missing critical details. MINOR version bump as these are additions that enhance 
+rather than change existing principles.
 
 MODIFIED PRINCIPLES:
-- N/A (Initial version)
+- III. Database-First Design - no changes, validated as complete
+- IV. Internationalization - no changes, validated as complete  
+- V. Documentation Standards - no changes, validated as complete
+- VI. GitHub Workflow Integration - no changes, validated as complete
 
 ADDED SECTIONS:
-- I. Modular Package Architecture
-- II. Rails Best Practices
-- III. Database-First Design with Supabase
-- IV. Internationalization (i18n)
-- V. Documentation Standards
-- VI. GitHub Workflow Integration
-- Technology Stack Requirements
-- Development Workflow
+- VII. React Repository Synchronization - process for tracking React reference implementation
+- Explicit Exclusions - what must NOT be implemented (docs/, AI configs, React flaws)
+- Amendment History - tracking constitutional changes
+
+REFINED SECTIONS:
+- Technology Stack Requirements - made definitive choices (Hotwire, ViewComponent, Tailwind CSS mandatory)
 
 REMOVED SECTIONS:
-- N/A (Initial version)
+- N/A
 
 TEMPLATES REQUIRING UPDATES:
-✅ plan-template.md - Reviewed, aligned with Ruby on Rails structure
-✅ spec-template.md - Reviewed, compatible with modular package approach
-✅ tasks-template.md - Reviewed, supports package-based task organization
+✅ plan-template.md - No changes required, already aligned
+✅ spec-template.md - No changes required, already aligned  
+✅ tasks-template.md - No changes required, already aligned
 
 FOLLOW-UP TODOS:
-- None - All placeholders filled
+- Create FEATURE_PARITY.md when first React feature is ported
+- Document bilingual verification tooling/process
+- Add CI/CD workflow examples in repository setup
 
 COMPLIANCE NOTES:
-- Constitution aligns with reference project (universo-platformo-react)
-- Adapted for Ruby on Rails ecosystem
+- Constitution now explicitly addresses React repository relationship
+- Technology stack choices are now definitive, eliminating ambiguity
+- Explicit exclusions prevent common pitfalls
+- All changes align with Ruby on Rails best practices
 - Maintains bilingual documentation requirement (English/Russian)
 - Preserves Universo Platformo architectural patterns
 
@@ -128,6 +134,20 @@ All development work MUST follow standardized GitHub workflows:
 
 **Rationale**: Consistent workflows improve project organization, enable better tracking of work, and maintain quality through systematic review processes.
 
+### VII. React Repository Synchronization
+
+All development work MUST maintain awareness of the reference React implementation:
+
+- Monitor Universo Platformo React repository (https://github.com/teknokomo/universo-platformo-react) regularly for updates
+- Maintain feature parity tracking document comparing implemented features across both versions
+- Translate React features to Ruby while preserving functionality, not implementation details
+- Explicitly avoid porting Flowise legacy code or unrefactored patterns from React version
+- Document decisions about which React features to implement, defer, or adapt
+- Prioritize feature parity over code parity - use Rails best practices even when React approach differs
+- Review React Issues and Pull Requests to understand upcoming features and architectural changes
+
+**Rationale**: The React version serves as a reference implementation for feature set and user experience, but each technology stack must follow its own best practices. Tracking both versions ensures consistent functionality while allowing optimal implementation for each platform.
+
 ## Technology Stack Requirements
 
 The following technology choices are MANDATORY for this project:
@@ -143,9 +163,10 @@ The following technology choices are MANDATORY for this project:
 - **Supabase Auth**: For authentication and user management
 
 ### Frontend (when applicable in -frt packages)
-- **ViewComponent** or **Hotwire (Turbo + Stimulus)**: For reactive frontend components
-- **Material Design for Rails** or equivalent: UI component library aligned with Material UI used in React version
-- **ERB/Slim templates**: For server-side rendering
+- **Hotwire (Turbo + Stimulus)**: MANDATORY for reactive frontend components
+- **ViewComponent**: MANDATORY for reusable UI components  
+- **Tailwind CSS**: MANDATORY for styling with custom Material Design theme
+- **ERB templates**: For server-side rendering (Slim optional if team prefers)
 
 ### Testing
 - **RSpec**: Primary testing framework for all packages
@@ -161,6 +182,35 @@ The following technology choices are MANDATORY for this project:
 ### Deployment and Infrastructure
 - **Docker**: For containerization and consistent environments
 - **GitHub Actions**: For CI/CD pipelines
+
+## Explicit Exclusions
+
+The following MUST NOT be implemented in this repository:
+
+### Documentation Repository
+- **DO NOT** create a `docs/` folder in this repository
+- Documentation will be hosted separately at docs.universo.pro
+- Only package-level README files and inline documentation belong in this repository
+- Reference external documentation with links, do not duplicate
+
+### AI Agent Configuration
+- **DO NOT** create custom AI agent configuration files unless explicitly needed for a specific feature
+- User will create `.github/agents/` content manually as needed
+- Existing agent files (from speckit) should not be modified without clear reason
+
+### React Implementation Flaws
+- **DO NOT** copy unrefactored patterns from React version
+- **DO NOT** port Flowise legacy code (check React git history)
+- **DO NOT** replicate hard-coded configurations from React version
+- **DO NOT** copy React-specific workarounds that don't apply to Rails
+
+### Monolithic Patterns
+- **DO NOT** create monolithic controllers or models
+- **DO NOT** bypass the package system for "convenience"
+- **DO NOT** share code between packages through global namespace
+- **DO NOT** create circular dependencies between packages
+
+**Rationale**: These exclusions prevent technical debt and ensure the Ruby implementation follows its own best practices rather than inheriting problems from the reference implementation.
 
 ## Development Workflow
 
@@ -219,4 +269,28 @@ This constitution supersedes all other development practices and guidelines. All
 - Version history is maintained with semantic versioning
 - Regular reviews (quarterly minimum) to ensure relevance and effectiveness
 
-**Version**: 1.0.0 | **Ratified**: 2025-11-16 | **Last Amended**: 2025-11-16
+**Version**: 1.1.0 | **Ratified**: 2025-11-16 | **Last Amended**: 2025-11-16
+
+---
+
+## Amendment History
+
+### Version 1.1.0 (2025-11-16)
+**Changes:**
+- Added Section VII: React Repository Synchronization
+- Added Explicit Exclusions section
+- Refined Technology Stack Requirements (made choices definitive)
+- Specified Hotwire, ViewComponent, and Tailwind CSS as mandatory
+
+**Rationale:**
+Deep analysis of specification vs original project goals revealed need for:
+- Clearer guidance on React repository tracking
+- Explicit exclusions to prevent implementing unwanted patterns
+- Definitive technology choices to eliminate implementation ambiguity
+
+**Impact:** MINOR version bump - additions don't break existing compliance
+
+### Version 1.0.0 (2025-11-16)
+**Changes:** Initial constitution ratified
+
+**Rationale:** Established foundational governance framework
