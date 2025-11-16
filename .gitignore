@@ -100,3 +100,51 @@
 ## S/MIME message
 *.smime
 *.vsix
+
+# Ruby/Rails specific
+## Bundler
+/.bundle
+/vendor/bundle
+
+## Rails
+/log/*
+/tmp/*
+!/log/.keep
+!/tmp/.keep
+/storage/*
+!/storage/.keep
+/public/assets
+/public/packs
+/public/packs-test
+/public/uploads
+
+## Database
+/db/*.sqlite3
+/db/*.sqlite3-*
+
+## Master key
+/config/master.key
+/config/credentials/*.key
+
+## Bootsnap
+/tmp/cache
+
+## RSpec
+/spec/examples.txt
+
+## SimpleCov
+/coverage/
+
+## Capybara
+/capybara-*.html
+
+## Yarn
+/yarn-error.log
+
+## Webpacker
+/public/packs
+/public/packs-test
+/node_modules
+/yarn-error.log
+yarn-debug.log*
+.yarn-integrity
