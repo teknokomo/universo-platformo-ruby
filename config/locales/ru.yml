@@ -1,0 +1,52 @@
+# Файл локализации на русском языке для Universo Platformo Ruby
+ru:
+  app:
+    name: "Universo Platformo"
+    tagline: "Реализация на Ruby on Rails"
+  
+  navigation:
+    home: "Главная"
+    clusters: "Кластеры"
+    metaverses: "Метавселенные"
+    uniks: "Уники"
+    help: "Справка"
+  
+  clusters:
+    title: "Кластеры"
+    create: "Создать кластер"
+    edit: "Редактировать кластер"
+    delete: "Удалить кластер"
+    show: "Просмотр кластера"
+    list: "Все кластеры"
+    
+    domains:
+      title: "Домены"
+      create: "Создать домен"
+      edit: "Редактировать домен"
+      delete: "Удалить домен"
+      
+    resources:
+      title: "Ресурсы"
+      create: "Создать ресурс"
+      edit: "Редактировать ресурс"
+      delete: "Удалить ресурс"
+  
+  actions:
+    create: "Создать"
+    edit: "Редактировать"
+    update: "Обновить"
+    delete: "Удалить"
+    cancel: "Отмена"
+    save: "Сохранить"
+    back: "Назад"
+    confirm: "Вы уверены?"
+  
+  messages:
+    success:
+      created: "%{model} успешно создан."
+      updated: "%{model} успешно обновлён."
+      deleted: "%{model} успешно удалён."
+    error:
+      not_found: "%{model} не найден."
+      unauthorized: "У вас нет прав для выполнения этого действия."
+      validation: "Пожалуйста, исправьте ошибки ниже."

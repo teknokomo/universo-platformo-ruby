@@ -1,0 +1,52 @@
+# English locale file for Universo Platformo Ruby
+en:
+  app:
+    name: "Universo Platformo"
+    tagline: "Ruby on Rails Implementation"
+  
+  navigation:
+    home: "Home"
+    clusters: "Clusters"
+    metaverses: "Metaverses"
+    uniks: "Uniks"
+    help: "Help"
+  
+  clusters:
+    title: "Clusters"
+    create: "Create Cluster"
+    edit: "Edit Cluster"
+    delete: "Delete Cluster"
+    show: "View Cluster"
+    list: "All Clusters"
+    
+    domains:
+      title: "Domains"
+      create: "Create Domain"
+      edit: "Edit Domain"
+      delete: "Delete Domain"
+      
+    resources:
+      title: "Resources"
+      create: "Create Resource"
+      edit: "Edit Resource"
+      delete: "Delete Resource"
+  
+  actions:
+    create: "Create"
+    edit: "Edit"
+    update: "Update"
+    delete: "Delete"
+    cancel: "Cancel"
+    save: "Save"
+    back: "Back"
+    confirm: "Are you sure?"
+  
+  messages:
+    success:
+      created: "%{model} was successfully created."
+      updated: "%{model} was successfully updated."
+      deleted: "%{model} was successfully deleted."
+    error:
+      not_found: "%{model} not found."
+      unauthorized: "You are not authorized to perform this action."
+      validation: "Please fix the errors below."
