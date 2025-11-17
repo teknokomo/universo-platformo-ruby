@@ -184,6 +184,52 @@ A user can manage clusters, which serve as the top-level organizational unit. Ea
 - **FR-049**: System MUST provide package creation template and checklist
 - **FR-050**: System MUST document architectural extensibility for future features (Spaces/Canvases, node systems)
 
+#### API Design Principles
+- **FR-051**: System MUST follow RESTful endpoint naming conventions for all API routes
+- **FR-052**: System MUST provide relationship management endpoints (e.g., `POST /clusters/:id/domains/:domain_id` to link entities)
+- **FR-053**: System MUST implement idempotent operations for relationship management (linking same entities multiple times should not error)
+- **FR-054**: System MUST return consistent error response format including error type, message, and validation details
+- **FR-055**: System MUST validate all input parameters and return detailed validation errors with field-level feedback
+- **FR-056**: System MUST implement API versioning strategy to support future changes without breaking existing clients
+- **FR-057**: System MUST document all API endpoints in package README files with request/response examples
+
+#### Security & Authorization
+- **FR-058**: System MUST implement authorization guards at controller level to verify entity ownership before operations
+- **FR-059**: System MUST enforce complete cluster-level data isolation (users cannot access other users' clusters)
+- **FR-060**: System MUST prevent orphaned resources through mandatory foreign key associations
+- **FR-061**: System MUST implement rate limiting on all API endpoints to prevent DoS attacks
+- **FR-062**: System MUST log all authentication events, authorization failures, and suspicious activities
+- **FR-063**: System MUST sanitize all user inputs to prevent SQL injection and XSS attacks
+- **FR-064**: System MUST use parameterized queries for all database operations
+
+#### Database Schema Patterns
+- **FR-065**: System MUST use junction tables for many-to-many relationships (e.g., ClusterUser, DomainCluster, ResourceDomain)
+- **FR-066**: System MUST enforce CASCADE delete at database level for hierarchical relationships
+- **FR-067**: System MUST use UNIQUE constraints on junction table combinations to prevent duplicate associations
+- **FR-068**: System MUST use JSONB columns for flexible metadata storage where appropriate
+- **FR-069**: System MUST name migrations using timestamp format: `YYYYMMDDHHMMSS_description.rb`
+- **FR-070**: System MUST include both up and down migration methods for all schema changes
+- **FR-071**: System MUST add database indexes on foreign keys and frequently queried columns
+
+#### Testing Requirements
+- **FR-072**: System MUST achieve minimum 80% code coverage across all packages
+- **FR-073**: System MUST include RSpec unit tests for all models with validation, association, and method tests
+- **FR-074**: System MUST include controller tests for all endpoints covering success and error cases
+- **FR-075**: System MUST include integration tests using Capybara for critical user journeys
+- **FR-076**: System MUST use FactoryBot for test data generation with realistic fixtures
+- **FR-077**: System MUST mock external service calls (Supabase, etc.) in unit tests
+- **FR-078**: System MUST test authorization guards to ensure proper access control
+- **FR-079**: System MUST test CASCADE delete behavior and referential integrity
+- **FR-080**: System MUST name test files using `_spec.rb` suffix matching the file under test
+
+#### File Naming Conventions
+- **FR-081**: System MUST use snake_case for all Ruby files (models, controllers, helpers, etc.)
+- **FR-082**: System MUST use singular names for model files (e.g., `cluster.rb`, not `clusters.rb`)
+- **FR-083**: System MUST use plural names for controller files (e.g., `clusters_controller.rb`)
+- **FR-084**: System MUST use kebab-case for directory names (e.g., `space-builder-srv/`)
+- **FR-085**: System MUST document file naming conventions in `.github/FILE_NAMING.md`
+- **FR-086**: System MUST follow Rails conventions for view file organization (controller_name/action_name.html.erb)
+
 ### Key Entities
 
 - **Cluster**: Top-level organizational unit that groups related domains. Contains attributes like name, description, and creation timestamp. Has one-to-many relationship with Domains.
@@ -298,6 +344,216 @@ When creating a new package following an existing pattern:
    - [ ] Verify responsive design
    - [ ] Run full test suite
 
+## Rails Engine Package Structure Template *(new section)*
+
+### Standard Server Package Structure
+
+Each `-srv` package follows this Rails Engine structure:
+
+```
+packages/feature-name-srv/
+└── base/
+    ├── app/
+    │   ├── models/
+    │   │   └── feature_name/           # Namespaced models
+    │   │       ├── entity_one.rb
+    │   │       ├── entity_two.rb
+    │   │       └── junction_table.rb
+    │   ├── controllers/
+    │   │   └── feature_name/           # Namespaced controllers
+    │   │       ├── application_controller.rb
+    │   │       ├── entity_ones_controller.rb
+    │   │       └── entity_twos_controller.rb
+    │   ├── views/
+    │   │   └── feature_name/           # Namespaced views
+    │   │       ├── entity_ones/
+    │   │       │   ├── index.html.erb
+    │   │       │   ├── show.html.erb
+    │   │       │   ├── new.html.erb
+    │   │       │   └── edit.html.erb
+    │   │       └── entity_twos/
+    │   │           └── ...
+    │   └── components/                 # ViewComponents
+    │       └── feature_name/
+    │           ├── entity_card_component.rb
+    │           ├── entity_card_component.html.erb
+    │           └── entity_form_component.rb
+    ├── config/
+    │   └── routes.rb                   # Engine routes
+    ├── db/
+    │   └── migrate/                    # Migrations
+    │       ├── YYYYMMDDHHMMSS_create_feature_name_entity_ones.rb
+    │       ├── YYYYMMDDHHMMSS_create_feature_name_entity_twos.rb
+    │       └── YYYYMMDDHHMMSS_create_feature_name_junction_tables.rb
+    ├── lib/
+    │   ├── feature_name/
+    │   │   ├── engine.rb               # Engine configuration
+    │   │   └── version.rb
+    │   └── feature_name.rb             # Main module
+    ├── spec/
+    │   ├── models/
+    │   │   └── feature_name/
+    │   │       ├── entity_one_spec.rb
+    │   │       └── entity_two_spec.rb
+    │   ├── controllers/
+    │   │   └── feature_name/
+    │   │       ├── entity_ones_controller_spec.rb
+    │   │       └── entity_twos_controller_spec.rb
+    │   ├── features/                   # Integration tests
+    │   │   └── entity_management_spec.rb
+    │   ├── factories/
+    │   │   └── feature_name/
+    │   │       ├── entity_ones.rb
+    │   │       └── entity_twos.rb
+    │   └── spec_helper.rb
+    ├── Gemfile
+    ├── feature_name.gemspec
+    ├── README.md
+    ├── README-RU.md
+    └── Rakefile
+```
+
+### Standard Frontend Package Structure
+
+Each `-frt` package contains ViewComponents and Stimulus controllers:
+
+```
+packages/feature-name-frt/
+└── base/
+    ├── app/
+    │   ├── components/
+    │   │   └── feature_name/
+    │   │       ├── list_component.rb
+    │   │       ├── list_component.html.erb
+    │   │       ├── card_component.rb
+    │   │       └── card_component.html.erb
+    │   ├── javascript/
+    │   │   └── feature_name/
+    │   │       └── controllers/        # Stimulus controllers
+    │   │           ├── list_controller.js
+    │   │           └── form_controller.js
+    │   └── assets/
+    │       └── stylesheets/
+    │           └── feature_name/
+    │               └── components.css
+    ├── lib/
+    │   ├── feature_name/
+    │   │   ├── engine.rb
+    │   │   └── version.rb
+    │   └── feature_name.rb
+    ├── spec/
+    │   └── components/
+    │       └── feature_name/
+    │           ├── list_component_spec.rb
+    │           └── card_component_spec.rb
+    ├── Gemfile
+    ├── feature_name.gemspec
+    ├── README.md
+    ├── README-RU.md
+    └── Rakefile
+```
+
+### Key Structure Principles
+
+**Namespacing:**
+- All models, controllers, views in packages MUST be namespaced with package name
+- Prevents naming conflicts between packages
+- Example: `Clusters::Domain` not just `Domain`
+
+**Engine Configuration:**
+- Each engine has `lib/{feature_name}/engine.rb` configuring Rails engine behavior
+- Mounts at specific path in main application
+- Can define isolated namespace or shared namespace
+
+**Migrations:**
+- Migrations live in package's `db/migrate/` directory
+- Main application discovers and runs all package migrations
+- Migration generator: `rails g migration AddFieldToTable --scope=feature_name`
+
+**Testing:**
+- Tests organized by type: models/, controllers/, features/
+- Factories in spec/factories/ with package namespace
+- Feature specs test full user journeys across UI
+
+**Dependencies:**
+- Gemspec defines dependencies for the package
+- Main application Gemfile includes: `gem 'feature_name', path: 'packages/feature-name-srv/base'`
+- Bundler resolves shared dependencies
+
+### Example: Clusters Package Structure
+
+```
+packages/clusters-srv/
+└── base/
+    ├── app/
+    │   ├── models/
+    │   │   └── clusters/
+    │   │       ├── cluster.rb
+    │   │       ├── domain.rb
+    │   │       ├── resource.rb
+    │   │       ├── cluster_user.rb         # Junction: Cluster ↔ User
+    │   │       ├── domain_cluster.rb       # Junction: Domain ↔ Cluster
+    │   │       └── resource_domain.rb      # Junction: Resource ↔ Domain
+    │   ├── controllers/
+    │   │   └── clusters/
+    │   │       ├── application_controller.rb
+    │   │       ├── clusters_controller.rb
+    │   │       ├── domains_controller.rb
+    │   │       └── resources_controller.rb
+    │   └── views/...
+    ├── config/
+    │   └── routes.rb                       # namespace :clusters do ... end
+    ├── db/
+    │   └── migrate/
+    │       ├── 20250116120000_create_clusters_clusters.rb
+    │       ├── 20250116120100_create_clusters_domains.rb
+    │       ├── 20250116120200_create_clusters_resources.rb
+    │       └── 20250116120300_create_clusters_junction_tables.rb
+    └── spec/...
+```
+
+### README Template Structure
+
+Each package README (both English and Russian) MUST contain:
+
+1. **Package Information Header**
+   - Package name, version, status
+   - Architecture type (Modern Rails Engine)
+   - Key features summary
+
+2. **Key Features Section**
+   - Entity hierarchy description
+   - Data isolation and security features
+   - Database integration details
+
+3. **Installation Section**
+   - How to install from workspace
+   - Build/test commands
+
+4. **Usage Section**
+   - How to mount engine in main app
+   - Basic code examples
+
+5. **API Reference (for -srv packages)**
+   - All endpoints with HTTP methods
+   - Request/response examples
+   - Error responses
+
+6. **Architecture Section**
+   - Entity relationships diagram or description
+   - Key design decisions
+   - Integration points
+
+7. **Testing Section**
+   - How to run tests
+   - Coverage requirements
+   - Key test scenarios
+
+8. **Contributing Section**
+   - How to add new features
+   - Code style guidelines
+   - PR requirements
+
 ## Success Criteria *(mandatory)*
 
 ### Measurable Outcomes
@@ -409,6 +665,150 @@ When creating a new package following an existing pattern:
 - React: Uses React Router, React Context, Redux
 - Ruby: Uses Rails routing, sessions, ViewComponents
 - Both: Provide same user features and experience
+
+## Future Package Roadmap *(new section)*
+
+Based on the React repository analysis, the following packages should be implemented in future phases following the Clusters pattern:
+
+### Core Business Packages (High Priority)
+
+**Metaverses Package** (`metaverses-frt/srv`)
+- Three-entity hierarchy: Metaverse → Section → Entity
+- Similar to Clusters but focused on virtual world organization
+- Implements same CRUD + relationship management patterns
+- Priority: Implement after Clusters as second reference implementation
+
+**Uniks Package** (`uniks-frt/srv`)
+- Extended hierarchy example (4+ levels possible)
+- May include: User → Workspace → Project → Task → Subtask structure
+- Demonstrates when to extend beyond 3-entity pattern
+- Priority: Medium (after Metaverses)
+
+**Profile Package** (`profile-frt/srv`)
+- User profile management
+- Two-entity pattern: User → ProfileSettings
+- Integration with authentication system
+- Priority: High (needed for user management)
+
+### Feature Enhancement Packages (Medium Priority)
+
+**Spaces Package** (`spaces-frt/srv`)
+- 3D environment management
+- Foundation for visual builder functionality
+- Integration with Metaverses
+- Priority: Medium (requires Metaverses first)
+
+**Space Builder Package** (`space-builder-frt/srv`)
+- Visual editor for creating 3D spaces
+- Node-based interface (future node system foundation)
+- Heavy frontend component package
+- Priority: Medium (requires Spaces)
+
+**Publish Package** (`publish-frt/srv`)
+- Publication and deployment system
+- Allows exporting/deploying created content
+- Integration with all entity types
+- Priority: Medium
+
+**Analytics Package** (`analytics-frt`)
+- Quiz and interaction analytics
+- Data visualization components
+- Read-heavy operations
+- Priority: Low (nice-to-have)
+
+### Shared Utility Packages (Should Be Created Early)
+
+**Universo Types** (`universo-types`)
+- Shared Ruby concerns and modules
+- Common interfaces and abstractions
+- Type definitions and validators
+- Priority: High (create alongside Clusters)
+
+**Universo Utils** (`universo-utils`)
+- Shared utility functions
+- Common helpers and extensions
+- String, date, validation utilities
+- Priority: High (create alongside Clusters)
+
+**Universo API Client** (`universo-api-client`)
+- Standardized HTTP client for internal package communication
+- Request/response handling
+- Error handling and retries
+- Priority: Medium
+
+**Universo I18n** (`universo-i18n`)
+- Internationalization utilities
+- Language switching helpers
+- Translation management
+- Priority: Medium (beyond English/Russian support)
+
+**Universo Template** (`universo-template`)
+- Shared ViewComponent library
+- Material Design Rails components
+- Hotwire + Stimulus integrations
+- Priority: High (create alongside UI framework integration)
+
+### Advanced Packages (Future/Research)
+
+**UPDL Package** (`updl`)
+- Universal Platform Description Language
+- Node system for describing scenes and logic
+- Foundation for visual programming features
+- Priority: Low (research phase, complex)
+
+**Multiplayer Package** (`multiplayer-srv`)
+- Real-time multiplayer functionality
+- WebSocket/ActionCable integration
+- Game state synchronization
+- Priority: Low (advanced feature)
+
+### Implementation Sequence Recommendation
+
+**Phase 1 - Foundation** (Current Sprint):
+1. Repository setup
+2. Monorepo structure
+3. Database integration
+4. Authentication
+5. UI framework
+6. Clusters package (reference implementation)
+7. Universo Types
+8. Universo Utils
+9. Universo Template
+
+**Phase 2 - Core Business Features**:
+1. Profile package
+2. Metaverses package (second reference)
+3. Universo API Client
+
+**Phase 3 - Extended Features**:
+1. Uniks package (extended hierarchy)
+2. Spaces package
+3. Space Builder package
+4. Publish package
+
+**Phase 4 - Advanced Features**:
+1. Analytics package
+2. Universo I18n (additional languages)
+3. UPDL package (research and prototype)
+4. Multiplayer package (if needed)
+
+### Package Creation Strategy
+
+For each new package:
+1. Review React implementation for feature understanding (not for code copying)
+2. Create spec using `/speckit.specify` adapted for Rails patterns
+3. Follow Package Creation Checklist from this spec
+4. Use Clusters or Metaverses as template depending on complexity
+5. Ensure bilingual documentation from start
+6. Add to Feature Parity tracking document
+
+### Notes
+
+- Not all React packages need Ruby equivalents (some are React-specific workarounds)
+- Focus on feature parity, not code parity
+- Avoid porting Flowise legacy code patterns
+- Each package should be independently testable and deployable
+- Maintain consistent patterns across all packages for developer familiarity
 
 ## Assumptions
 
