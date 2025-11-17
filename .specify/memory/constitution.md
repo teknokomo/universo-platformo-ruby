@@ -3,11 +3,46 @@
 ║                        SYNC IMPACT REPORT                                     ║
 ╚══════════════════════════════════════════════════════════════════════════════╝
 
-VERSION CHANGE: 1.0.0 → 1.1.0
+VERSION CHANGE: 1.1.0 → 1.2.0
 
-RATIONALE: Deep analysis of specification against original project goals revealed 
-missing critical details. MINOR version bump as these are additions that enhance 
-rather than change existing principles.
+RATIONALE: Deep review of project goals emphasized absolute requirement for modular
+implementation with all functionality in packages/. MINOR version bump as these are
+clarifications and enforcement additions that strengthen existing principles.
+
+MODIFIED PRINCIPLES:
+- I. Modular Package Architecture - ENHANCED with explicit directory requirements
+- Explicit Exclusions - Monolithic Patterns - STRENGTHENED
+- Compliance Verification - ENHANCED with package structure checks
+
+ADDED DETAILS:
+- Explicit "packages/" directory requirement in Section I
+- "What goes in packages/" vs "What stays in root application/" lists  
+- Future extraction goal explicitly stated
+- Package structure enforcement in compliance checks
+- Prohibition against implementing features outside packages/
+
+REMOVED SECTIONS:
+- N/A
+
+TEMPLATES REQUIRING UPDATES:
+✅ plan-template.md - Already aligned with package structure
+✅ spec-template.md - Already aligned with package requirements
+✅ tasks-template.md - Already aligned with modular approach
+
+FOLLOW-UP TODOS:
+- Ensure all implementation follows enhanced package requirements
+- Add CI/CD checks to verify code is in correct packages/
+- Update any existing code that violates package structure
+
+COMPLIANCE NOTES:
+- Constitution now explicitly mandates packages/ directory for all features
+- Clear boundaries between root application and packages
+- Future repository extraction goal is explicit
+- Package structure enforcement is now a gate requirement
+- Maintains all existing requirements (Rails best practices, bilingual docs, etc.)
+
+Last Updated: 2025-11-17
+-->
 
 MODIFIED PRINCIPLES:
 - III. Database-First Design - no changes, validated as complete
@@ -53,16 +88,32 @@ Last Updated: 2025-11-16
 
 ### I. Modular Package Architecture
 
-All functionality MUST be organized as independent packages within the monorepo structure. Each package represents a distinct feature domain (e.g., clusters, metaverses, spaces, authentication) and MUST:
+All functionality MUST be organized as independent packages in the `packages/` directory. Each package represents a distinct feature domain (e.g., clusters, metaverses, spaces, authentication) and MUST:
 
+- Be located at `packages/<feature>-{frt|srv}/base/` (e.g., `packages/clusters-srv/base/`)
 - Be self-contained with clear boundaries and minimal dependencies
 - Follow the `-frt` (frontend) and `-srv` (server) suffix naming convention when functionality requires both client and server components
 - Include a `base/` subdirectory at the root to support future alternative implementations
 - Have its own README.md and README-RU.md files documenting purpose, API, and usage
 - Be independently testable using RSpec or equivalent Ruby testing frameworks
 - Use Rails engines or similar modularization approaches to ensure proper isolation
+- Be structured to allow future extraction as an independent repository and gem
 
-**Rationale**: This modular structure enables parallel development, independent deployment, technology stack flexibility, and clear separation of concerns across the large Universo Platformo ecosystem.
+**What goes in packages/:**
+- ALL feature-specific models, controllers, views, and components
+- ALL business logic for specific domains (clusters, metaverses, spaces, etc.)
+- Feature-specific database migrations
+- Feature-specific tests and factories
+- Shared utility packages (universo-types, universo-utils, etc.)
+
+**What stays in root application:**
+- ONLY application launcher files (config.ru, Rakefile, Gemfile)
+- ONLY main routes file that mounts package engines
+- ONLY shared application layouts and base application controller
+- ONLY database configuration files
+- ONLY environment and initializer configurations
+
+**Rationale**: This modular structure enables parallel development, independent deployment, technology stack flexibility, and clear separation of concerns across the large Universo Platformo ecosystem. Packages are designed as workspace packages in a monorepo initially, with the explicit goal of extracting them into separate repositories as the project matures.
 
 ### II. Rails Best Practices
 
@@ -207,7 +258,9 @@ The following MUST NOT be implemented in this repository:
 ### Monolithic Patterns
 - **DO NOT** create monolithic controllers or models
 - **DO NOT** bypass the package system for "convenience"
-- **DO NOT** share code between packages through global namespace
+- **DO NOT** place feature code outside the `packages/` directory
+- **DO NOT** implement features directly in the root Rails application (except for the allowed root files)
+- **DO NOT** share code between packages through global namespace (use shared packages instead)
 - **DO NOT** create circular dependencies between packages
 
 **Rationale**: These exclusions prevent technical debt and ensure the Ruby implementation follows its own best practices rather than inheriting problems from the reference implementation.
@@ -255,9 +308,12 @@ This constitution supersedes all other development practices and guidelines. All
 
 ### Compliance Verification
 - All Pull Requests MUST be reviewed against this constitution
+- All Pull Requests MUST verify that new functionality is placed in appropriate `packages/` directory
 - Automated checks SHOULD enforce technical requirements where possible
+- CI/CD SHOULD check that feature code does not exist outside `packages/` directory (except allowed root files)
 - Any deviation from principles MUST be explicitly justified in PR description
 - Constitution compliance is a mandatory gate for merging
+- Code reviewers MUST reject PRs that implement features outside the package system
 
 ### Complexity Justification
 - Any complexity beyond standard Rails patterns MUST be justified
@@ -269,11 +325,29 @@ This constitution supersedes all other development practices and guidelines. All
 - Version history is maintained with semantic versioning
 - Regular reviews (quarterly minimum) to ensure relevance and effectiveness
 
-**Version**: 1.1.0 | **Ratified**: 2025-11-16 | **Last Amended**: 2025-11-16
+**Version**: 1.2.0 | **Ratified**: 2025-11-16 | **Last Amended**: 2025-11-17
 
 ---
 
 ## Amendment History
+
+### Version 1.2.0 (2025-11-17)
+**Changes:**
+- Enhanced Section I: Modular Package Architecture with explicit `packages/` directory requirement
+- Added detailed "What goes in packages/" and "What stays in root application/" lists
+- Clarified future extraction goal (workspace packages → independent repositories)
+- Strengthened Explicit Exclusions - Monolithic Patterns section
+- Enhanced Compliance Verification with package structure enforcement
+- Added explicit prohibition against implementing features outside packages/
+
+**Rationale:**
+Deep review of project goals emphasized absolute requirement for modular implementation:
+- ALL functionality (except root app files) MUST be in packages/
+- Packages will eventually be extracted to separate repositories
+- Need explicit enforcement to prevent monolithic implementation patterns
+- Clear guidelines needed on what belongs in packages/ vs root application
+
+**Impact:** MINOR version bump - additions strengthen existing principle without breaking changes
 
 ### Version 1.1.0 (2025-11-16)
 **Changes:**

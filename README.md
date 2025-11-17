@@ -14,6 +14,14 @@ This project is currently in the initial setup phase. The repository structure, 
 
 ## Architecture
 
+### Modular Package Architecture
+
+**ALL functionality** is organized as independent packages in the `packages/` directory. This modular approach enables:
+- Parallel development of features
+- Clear separation of concerns
+- Independent testing and deployment
+- **Future extraction**: Packages are designed as workspace packages in the monorepo initially, with the goal of extracting them into separate repositories as the project matures
+
 ### Monorepo Structure
 
 The project uses a monorepo structure with packages organized in the `packages/` directory:
@@ -26,6 +34,18 @@ packages/
 │   └── base/         # Base implementation
 └── ...               # Additional feature packages
 ```
+
+**What goes in packages/:**
+- All feature-specific code (models, controllers, views, components)
+- Business logic for specific domains (clusters, metaverses, spaces, etc.)
+- Feature-specific database migrations and tests
+- Shared utility packages (universo-types, universo-utils, etc.)
+
+**What stays in root application:**
+- Application launcher and configuration files
+- Main routes file that mounts package engines
+- Shared application layouts
+- Database and environment configuration
 
 ### Package Naming Convention
 
