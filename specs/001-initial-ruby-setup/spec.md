@@ -230,6 +230,77 @@ A user can manage clusters, which serve as the top-level organizational unit. Ea
 - **FR-085**: System MUST document file naming conventions in `.github/FILE_NAMING.md`
 - **FR-086**: System MUST follow Rails conventions for view file organization (controller_name/action_name.html.erb)
 
+#### Row-Level Security (RLS) Requirements
+- **FR-087**: System MUST support PostgreSQL Row-Level Security (RLS) policies for data isolation
+- **FR-088**: System MUST propagate authentication context (JWT claims) to database session variables
+- **FR-089**: System MUST use per-request database connections for RLS context isolation
+- **FR-090**: System MUST configure Supabase RLS policies for all user-owned entities
+- **FR-091**: System MUST implement middleware to set PostgreSQL session variables from authenticated user token
+- **FR-092**: System MUST ensure RLS context is properly cleaned up after each request
+- **FR-093**: System MUST fall back to application-level authorization if RLS is not available
+- **FR-094**: System MUST log RLS policy violations and authorization failures
+- **FR-095**: System MUST document RLS policy creation and testing procedures
+
+#### Role-Based Authorization System
+- **FR-096**: System MUST implement three-tier role system: owner, admin, member
+- **FR-097**: System MUST define role permissions: owner (full access), admin (manage members, no delete), member (view only)
+- **FR-098**: System MUST enforce role permissions at controller level before any data access
+- **FR-099**: System MUST prevent privilege escalation (members can't self-promote to admin/owner)
+- **FR-100**: System MUST preserve at least one owner per entity (cannot remove last owner)
+- **FR-101**: System MUST support role-based method authorization via concern modules
+- **FR-102**: System MUST allow role updates only by existing owners or admins
+- **FR-103**: System MUST audit all role changes with timestamp and actor tracking
+- **FR-104**: System MUST provide role-checking helper methods (can_view?, can_edit?, can_delete?, can_manage_members?)
+- **FR-105**: System MUST test role-based authorization in all controller specs
+
+#### Member Management Endpoints
+- **FR-106**: System MUST provide GET /clusters/:id/members endpoint to list all members with roles
+- **FR-107**: System MUST provide POST /clusters/:id/members endpoint to add new members with specified role
+- **FR-108**: System MUST provide DELETE /clusters/:id/members/:user_id endpoint to remove members
+- **FR-109**: System MUST provide PATCH /clusters/:id/members/:user_id endpoint to update member role or comment
+- **FR-110**: System MUST support pagination, sorting, and search on member list endpoint
+- **FR-111**: System MUST prevent removal of last owner via member management endpoints
+- **FR-112**: System MUST return member details including email, nickname, role, and joined date
+- **FR-113**: System MUST validate role values (only owner, admin, member allowed)
+- **FR-114**: System MUST support optional comment field on member associations
+- **FR-115**: System MUST return appropriate errors for invalid member operations
+
+#### API Query Parameter Standards
+- **FR-116**: System MUST support pagination parameters: page (default 1), per_page (default 25, max 100)
+- **FR-117**: System MUST support sorting parameters: sort_by (field name), sort_order (asc/desc)
+- **FR-118**: System MUST support search parameter for full-text search where applicable
+- **FR-119**: System MUST validate all query parameters and return errors for invalid values
+- **FR-120**: System MUST implement Paginatable concern for consistent pagination across controllers
+- **FR-121**: System MUST document all supported query parameters in API documentation
+- **FR-122**: System MUST include pagination metadata in responses (total, page, per_page, pages)
+- **FR-123**: System MUST limit maximum per_page to prevent performance issues
+- **FR-124**: System MUST provide sensible defaults for all optional query parameters
+- **FR-125**: System MUST support filtering by common fields (status, created_at range, updated_at range)
+
+#### API Error Response Standards
+- **FR-126**: System MUST return consistent error response format: { success: false, error: string, errors?: array, field_errors?: object }
+- **FR-127**: System MUST use appropriate HTTP status codes: 400 (bad request), 401 (unauthorized), 403 (forbidden), 404 (not found), 422 (validation error)
+- **FR-128**: System MUST include field-specific errors in field_errors object for validation failures
+- **FR-129**: System MUST provide human-readable error messages in error field
+- **FR-130**: System MUST implement ApiErrorHandler concern for consistent error handling
+- **FR-131**: System MUST rescue common exceptions (RecordNotFound, RecordInvalid, ParameterMissing) and format appropriately
+- **FR-132**: System MUST log all errors with appropriate severity levels
+- **FR-133**: System MUST not expose sensitive information (stack traces, internal paths) in production error responses
+- **FR-134**: System MUST provide error codes in addition to messages for programmatic error handling
+- **FR-135**: System MUST document all possible error responses for each endpoint
+
+#### Bilingual Documentation Verification
+- **FR-136**: System MUST include automated verification of bilingual documentation line counts
+- **FR-137**: System MUST fail CI/CD pipeline if English and Russian documentation have different line counts
+- **FR-138**: System MUST run documentation checks on every pull request that modifies .md files
+- **FR-139**: System MUST provide clear error messages indicating which documentation files are out of sync
+- **FR-140**: System MUST verify all README.md files have corresponding README-RU.md files
+- **FR-141**: System MUST create tools/check_i18n_docs.rb script for line count verification
+- **FR-142**: System MUST create .github/workflows/docs-i18n-check.yml workflow
+- **FR-143**: System MUST document bilingual documentation requirements in .github/instructions/i18n-docs.md
+- **FR-144**: System MUST provide instructions for fixing documentation sync issues
+- **FR-145**: System MUST verify documentation structure matches between English and Russian versions
+
 ### Key Entities
 
 - **Cluster**: Top-level organizational unit that groups related domains. Contains attributes like name, description, and creation timestamp. Has one-to-many relationship with Domains.
@@ -239,6 +310,54 @@ A user can manage clusters, which serve as the top-level organizational unit. Ea
 - **Resource**: Lowest-level entity within the hierarchy. Contains attributes like name, type, configuration, and belongs to a single Domain.
 
 - **User**: Represents an authenticated user of the system. Contains credentials and profile information managed by the authentication service. Has permissions to perform operations on Clusters, Domains, and Resources.
+
+- **ClusterMember**: Junction entity representing user membership in a cluster with role (owner/admin/member) and optional comment. Enables role-based authorization and tracks membership metadata.
+
+### Shared Package Architecture
+
+The project includes shared utility packages that provide common functionality across all feature packages:
+
+#### universo-types Package (`packages/universo-types/base/`)
+- Entity schemas with ActiveModel validations
+- Concern modules for shared behavior (RoleBasedAccess, Paginatable, SoftDeletable)
+- Custom types and value objects
+- JSON schemas for API validation
+- Zod-equivalent validators using dry-validation or active_model_validators
+
+**Priority**: High - needed immediately for Clusters implementation
+
+#### universo-utils Package (`packages/universo-utils/base/`)
+- API client helpers (HTTP request wrappers, error handling, retry logic)
+- Math utilities (vector operations, 3D transformations, geometric calculations)
+- Serialization helpers (JSON, MessagePack, binary formats)
+- Validation utilities (custom validators, format checkers)
+- Rate limiting helpers (Redis-based rate limiters, token bucket implementation)
+- Environment detection (development/test/production helpers)
+- Delta compression utilities
+- Network utilities (IP validation, URL parsing)
+
+**Priority**: High - needed for API clients and shared utilities
+
+#### universo-template Package (`packages/universo-template/base/`)
+- Shared ViewComponent library (button, form, card, list, modal components)
+- Stimulus controllers for common behaviors (form validation, auto-save, copy-to-clipboard)
+- Tailwind component styles with Material Design theme
+- Hotwire Turbo Frame patterns (lazy loading, infinite scroll, live updates)
+- Reusable layout components (navigation, sidebar, footer)
+
+**Priority**: High - needed for UI consistency across packages
+
+#### universo-i18n Package (`packages/universo-i18n/base/`)
+- I18n helper methods (locale switching, fallback handling)
+- Translation management tools (missing translation detection, synchronization)
+- Locale switching utilities (cookie-based, header-based, URL-based)
+- Pluralization rules for additional languages
+- Date/time formatting helpers
+- Number formatting helpers (currency, percentages)
+
+**Priority**: Medium - can be deferred if only English/Russian needed initially
+
+**Rationale**: Shared packages reduce code duplication, ensure consistency, and simplify maintenance. They follow the same Rails Engine pattern as feature packages.
 
 ## Package Architecture Patterns *(new section)*
 
@@ -553,6 +672,471 @@ Each package README (both English and Russian) MUST contain:
    - How to add new features
    - Code style guidelines
    - PR requirements
+
+## API Design Standards *(new section)*
+
+### RESTful Endpoint Patterns
+
+All API endpoints MUST follow these standards for consistency:
+
+**Base CRUD Pattern**:
+```ruby
+# Standard resource endpoints
+GET    /clusters                    # List all clusters
+POST   /clusters                    # Create new cluster
+GET    /clusters/:id                # Get specific cluster
+PATCH  /clusters/:id                # Update cluster
+DELETE /clusters/:id                # Delete cluster
+```
+
+**Relationship Management Pattern**:
+```ruby
+# Idempotent relationship operations
+POST   /clusters/:id/domains/:domain_id      # Add domain to cluster
+DELETE /clusters/:id/domains/:domain_id      # Remove domain from cluster
+GET    /clusters/:id/domains                 # List cluster's domains
+GET    /clusters/:id/resources               # List all resources in hierarchy
+```
+
+**Member Management Pattern**:
+```ruby
+# Role-based member management
+GET    /clusters/:id/members                 # List members with roles
+POST   /clusters/:id/members                 # Add new member
+DELETE /clusters/:id/members/:user_id        # Remove member
+PATCH  /clusters/:id/members/:user_id        # Update role/comment
+```
+
+### Query Parameters
+
+All list endpoints MUST support these standard query parameters:
+
+```ruby
+# Pagination
+?page=1              # Page number (default: 1)
+?per_page=25         # Items per page (default: 25, max: 100)
+
+# Sorting
+?sort_by=created_at  # Field to sort by (default: created_at)
+?sort_order=desc     # Sort direction: asc or desc (default: desc)
+
+# Search
+?search=keyword      # Full-text search across relevant fields
+
+# Filtering
+?status=active       # Filter by status
+?created_after=2025-01-01  # Filter by date range
+?created_before=2025-12-31
+```
+
+### Response Format Standards
+
+**Success Response**:
+```json
+{
+  "success": true,
+  "data": { /* entity or array */ },
+  "meta": {
+    "total": 100,
+    "page": 1,
+    "per_page": 25,
+    "pages": 4
+  }
+}
+```
+
+**Error Response**:
+```json
+{
+  "success": false,
+  "error": "Human-readable error message",
+  "error_code": "VALIDATION_ERROR",
+  "errors": ["Field 1 error", "Field 2 error"],
+  "field_errors": {
+    "name": ["can't be blank", "is too short"],
+    "email": ["is invalid"]
+  }
+}
+```
+
+### HTTP Status Codes
+
+- **200 OK**: Successful GET, PATCH
+- **201 Created**: Successful POST
+- **204 No Content**: Successful DELETE
+- **400 Bad Request**: Invalid parameters, malformed request
+- **401 Unauthorized**: Missing or invalid authentication
+- **403 Forbidden**: Authenticated but lacks permissions
+- **404 Not Found**: Resource doesn't exist
+- **422 Unprocessable Entity**: Validation errors
+- **429 Too Many Requests**: Rate limit exceeded
+- **500 Internal Server Error**: Unexpected server error
+
+### Idempotency Requirements
+
+- GET, PUT, DELETE operations MUST be idempotent
+- Relationship management operations (adding/removing) MUST be idempotent
+- Adding same domain to cluster twice returns success, not error
+- Removing non-existent relationship returns success (already removed)
+
+### Controller Concerns
+
+**Paginatable Concern**:
+```ruby
+# app/controllers/concerns/paginatable.rb
+module Paginatable
+  extend ActiveSupport::Concern
+  
+  included do
+    before_action :set_pagination_params, only: [:index]
+  end
+  
+  private
+  
+  def set_pagination_params
+    @page = [params[:page]&.to_i || 1, 1].max
+    @per_page = [[params[:per_page]&.to_i || 25, 100].min, 1].max
+    @sort_by = params[:sort_by] || 'created_at'
+    @sort_order = %w[asc desc].include?(params[:sort_order]) ? params[:sort_order] : 'desc'
+    @search = params[:search]
+  end
+  
+  def pagination_meta(collection)
+    {
+      total: collection.total_count,
+      page: @page,
+      per_page: @per_page,
+      pages: collection.total_pages
+    }
+  end
+end
+```
+
+**ApiErrorHandler Concern**:
+```ruby
+# app/controllers/concerns/api_error_handler.rb
+module ApiErrorHandler
+  extend ActiveSupport::Concern
+  
+  included do
+    rescue_from ActiveRecord::RecordNotFound, with: :not_found
+    rescue_from ActiveRecord::RecordInvalid, with: :unprocessable_entity
+    rescue_from ActionController::ParameterMissing, with: :bad_request
+    rescue_from Pundit::NotAuthorizedError, with: :forbidden
+  end
+  
+  private
+  
+  def render_success(data, meta: nil, status: :ok)
+    response = { success: true, data: data }
+    response[:meta] = meta if meta
+    render json: response, status: status
+  end
+  
+  def render_error(message, status: :unprocessable_entity, errors: nil, field_errors: nil, error_code: nil)
+    render json: {
+      success: false,
+      error: message,
+      error_code: error_code,
+      errors: errors,
+      field_errors: field_errors
+    }.compact, status: status
+  end
+  
+  def not_found(exception)
+    render_error('Resource not found', status: :not_found, error_code: 'NOT_FOUND')
+  end
+  
+  def unprocessable_entity(exception)
+    record = exception.record
+    render_error(
+      'Validation failed',
+      status: :unprocessable_entity,
+      errors: record.errors.full_messages,
+      field_errors: record.errors.messages,
+      error_code: 'VALIDATION_ERROR'
+    )
+  end
+  
+  def forbidden(exception)
+    render_error(
+      exception.message || 'You are not authorized to perform this action',
+      status: :forbidden,
+      error_code: 'FORBIDDEN'
+    )
+  end
+end
+```
+
+## Test Organization Standards *(new section)*
+
+### Directory Structure
+
+Tests MUST be organized by type following RSpec conventions:
+
+```ruby
+spec/
+├── models/                          # Model unit tests
+│   └── clusters/
+│       ├── cluster_spec.rb
+│       ├── domain_spec.rb
+│       ├── resource_spec.rb
+│       └── cluster_member_spec.rb
+├── controllers/                     # Controller unit tests
+│   └── clusters/
+│       ├── clusters_controller_spec.rb
+│       ├── domains_controller_spec.rb
+│       └── members_controller_spec.rb
+├── requests/                        # API integration tests
+│   └── clusters/
+│       ├── clusters_api_spec.rb
+│       ├── domains_api_spec.rb
+│       └── members_api_spec.rb
+├── features/                        # Capybara feature tests
+│   └── clusters/
+│       ├── cluster_management_spec.rb
+│       └── member_management_spec.rb
+├── services/                        # Service object tests
+│   └── clusters/
+│       └── cluster_creator_spec.rb
+├── lib/                             # Library code tests
+│   └── clusters/
+│       └── permission_calculator_spec.rb
+├── factories/                       # FactoryBot definitions
+│   └── clusters/
+│       ├── clusters.rb
+│       ├── domains.rb
+│       ├── resources.rb
+│       └── cluster_members.rb
+├── support/                         # Test support files
+│   ├── database_helpers.rb
+│   ├── auth_helpers.rb
+│   ├── api_helpers.rb
+│   └── feature_helpers.rb
+└── rails_helper.rb                  # RSpec Rails configuration
+```
+
+### Test Naming Patterns
+
+- **Model specs**: `{model_name}_spec.rb` (e.g., `cluster_spec.rb`)
+- **Controller specs**: `{controller_name}_spec.rb` (e.g., `clusters_controller_spec.rb`)
+- **Request specs**: `{resource}_api_spec.rb` (e.g., `clusters_api_spec.rb`)
+- **Feature specs**: `{feature_name}_spec.rb` (e.g., `cluster_management_spec.rb`)
+- **Service specs**: `{service_name}_spec.rb` (e.g., `cluster_creator_spec.rb`)
+
+### Test Coverage Requirements
+
+- **Minimum Coverage**: 80% overall code coverage
+- **Critical Paths**: 100% coverage for authentication, authorization, payment logic
+- **Models**: Test all validations, associations, scopes, instance methods, class methods
+- **Controllers**: Test all actions with success and error cases
+- **Features**: Test critical user journeys end-to-end
+- **Services**: Test all public methods with edge cases
+
+### Testing Strategy
+
+**Mock External Services**:
+```ruby
+# spec/support/supabase_helpers.rb
+RSpec.configure do |config|
+  config.before(:each) do
+    # Mock Supabase Auth API calls
+    allow(Supabase::Auth).to receive(:sign_in).and_return(mock_auth_response)
+    allow(Supabase::Auth).to receive(:verify_token).and_return(mock_user)
+  end
+end
+```
+
+**Use Real Database with Transactions**:
+```ruby
+# spec/rails_helper.rb
+RSpec.configure do |config|
+  config.use_transactional_fixtures = true  # Rollback after each test
+  config.before(:suite) do
+    DatabaseCleaner.strategy = :transaction
+  end
+end
+```
+
+**FactoryBot Best Practices**:
+```ruby
+# spec/factories/clusters/clusters.rb
+FactoryBot.define do
+  factory :cluster, class: 'Clusters::Cluster' do
+    name { Faker::Company.name }
+    description { Faker::Lorem.paragraph }
+    
+    trait :with_owner do
+      after(:create) do |cluster|
+        create(:cluster_member, cluster: cluster, role: 'owner')
+      end
+    end
+    
+    trait :with_domains do
+      after(:create) do |cluster|
+        create_list(:domain, 3, clusters: [cluster])
+      end
+    end
+  end
+end
+```
+
+**Test Examples**:
+
+**Model Test**:
+```ruby
+# spec/models/clusters/cluster_spec.rb
+RSpec.describe Clusters::Cluster, type: :model do
+  describe 'associations' do
+    it { should have_many(:cluster_members).dependent(:destroy) }
+    it { should have_many(:users).through(:cluster_members) }
+    it { should have_many(:domains).through(:domain_clusters) }
+  end
+  
+  describe 'validations' do
+    it { should validate_presence_of(:name) }
+    it { should validate_length_of(:name).is_at_least(3).is_at_most(100) }
+  end
+  
+  describe '#can?' do
+    let(:cluster) { create(:cluster, :with_owner) }
+    let(:owner) { cluster.owners.first }
+    let(:member) { create(:user) }
+    
+    before { cluster.add_member(member, role: 'member') }
+    
+    it 'returns true for owner with edit permission' do
+      expect(cluster.can?(owner, :edit)).to be true
+    end
+    
+    it 'returns false for member with edit permission' do
+      expect(cluster.can?(member, :edit)).to be false
+    end
+  end
+end
+```
+
+**Controller Test**:
+```ruby
+# spec/controllers/clusters/clusters_controller_spec.rb
+RSpec.describe Clusters::ClustersController, type: :controller do
+  let(:user) { create(:user) }
+  let(:cluster) { create(:cluster, :with_owner, owner: user) }
+  
+  before { sign_in user }
+  
+  describe 'GET #index' do
+    it 'returns success' do
+      get :index
+      expect(response).to have_http_status(:success)
+    end
+    
+    it 'returns user clusters only' do
+      other_cluster = create(:cluster)
+      get :index
+      json = JSON.parse(response.body)
+      expect(json['data'].map { |c| c['id'] }).to include(cluster.id)
+      expect(json['data'].map { |c| c['id'] }).not_to include(other_cluster.id)
+    end
+  end
+  
+  describe 'DELETE #destroy' do
+    context 'as owner' do
+      it 'deletes cluster' do
+        delete :destroy, params: { id: cluster.id }
+        expect(response).to have_http_status(:no_content)
+        expect(Clusters::Cluster.exists?(cluster.id)).to be false
+      end
+    end
+    
+    context 'as member' do
+      let(:member) { create(:user) }
+      before do
+        cluster.add_member(member, role: 'member')
+        sign_in member
+      end
+      
+      it 'returns forbidden' do
+        delete :destroy, params: { id: cluster.id }
+        expect(response).to have_http_status(:forbidden)
+      end
+    end
+  end
+end
+```
+
+**Request Test**:
+```ruby
+# spec/requests/clusters/clusters_api_spec.rb
+RSpec.describe 'Clusters API', type: :request do
+  let(:user) { create(:user) }
+  let(:auth_headers) { { 'Authorization' => "Bearer #{user.jwt_token}" } }
+  
+  describe 'POST /clusters' do
+    let(:valid_params) do
+      { cluster: { name: 'Test Cluster', description: 'Test Description' } }
+    end
+    
+    it 'creates cluster' do
+      expect {
+        post '/clusters', params: valid_params, headers: auth_headers
+      }.to change(Clusters::Cluster, :count).by(1)
+      
+      expect(response).to have_http_status(:created)
+      json = JSON.parse(response.body)
+      expect(json['success']).to be true
+      expect(json['data']['name']).to eq('Test Cluster')
+    end
+    
+    context 'with invalid params' do
+      let(:invalid_params) { { cluster: { name: '' } } }
+      
+      it 'returns validation errors' do
+        post '/clusters', params: invalid_params, headers: auth_headers
+        
+        expect(response).to have_http_status(:unprocessable_entity)
+        json = JSON.parse(response.body)
+        expect(json['success']).to be false
+        expect(json['field_errors']['name']).to include("can't be blank")
+      end
+    end
+  end
+end
+```
+
+**Feature Test**:
+```ruby
+# spec/features/clusters/cluster_management_spec.rb
+RSpec.describe 'Cluster Management', type: :feature do
+  let(:user) { create(:user) }
+  
+  before do
+    login_as(user)
+    visit clusters_path
+  end
+  
+  scenario 'User creates a new cluster' do
+    click_button 'New Cluster'
+    
+    fill_in 'Name', with: 'My New Cluster'
+    fill_in 'Description', with: 'This is a test cluster'
+    click_button 'Create'
+    
+    expect(page).to have_content('Cluster created successfully')
+    expect(page).to have_content('My New Cluster')
+  end
+  
+  scenario 'User cannot delete cluster with domains', js: true do
+    cluster = create(:cluster, :with_owner, :with_domains, owner: user)
+    visit cluster_path(cluster)
+    
+    click_button 'Delete'
+    
+    expect(page).to have_content('Cannot delete cluster with domains')
+    expect(Clusters::Cluster.exists?(cluster.id)).to be true
+  end
+end
+```
 
 ## Success Criteria *(mandatory)*
 
