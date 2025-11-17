@@ -102,12 +102,133 @@ default_scope { active }
 
 **Business Rules**:
 - Cannot be deleted if has associated domains
-- User can only access their own clusters
+- User can only access their own clusters (or clusters they are members of)
 - Name must be unique per user
 
 ---
 
-### 3. Clusters::Domain
+### 3. Clusters::ClusterMember
+
+**Purpose**: Junction table with role-based access control for cluster membership
+
+**Attributes**:
+- `id` (bigint, primary key, auto-increment)
+- `cluster_id` (bigint, not null, foreign key to clusters)
+- `user_id` (UUID/bigint, not null, foreign key to users)
+- `role` (string, not null, default: 'member')
+- `comment` (text, nullable) - Optional note about the member
+- `created_at` (timestamp, auto-generated)
+- `updated_at` (timestamp, auto-generated)
+
+**Validations**:
+```ruby
+validates :cluster_id, presence: true
+validates :user_id, presence: true
+validates :role, presence: true, inclusion: { in: %w[owner admin member] }
+validates :user_id, uniqueness: { scope: :cluster_id, message: 'is already a member of this cluster' }
+
+validate :at_least_one_owner_must_remain
+
+private
+
+def at_least_one_owner_must_remain
+  if role_was == 'owner' && role != 'owner'
+    remaining_owners = self.class.where(
+      cluster_id: cluster_id,
+      role: 'owner'
+    ).where.not(id: id).count
+    
+    if remaining_owners < 1
+      errors.add(:role, 'Cannot remove the last owner from a cluster')
+    end
+  end
+end
+```
+
+**Associations**:
+```ruby
+belongs_to :cluster, class_name: 'Clusters::Cluster'
+belongs_to :user
+```
+
+**Scopes**:
+```ruby
+scope :owners, -> { where(role: 'owner') }
+scope :admins, -> { where(role: 'admin') }
+scope :members, -> { where(role: 'member') }
+scope :for_cluster, ->(cluster_id) { where(cluster_id: cluster_id) }
+scope :for_user, ->(user_id) { where(user_id: user_id) }
+```
+
+**Indexes**:
+- `index_cluster_members_on_cluster_id`
+- `index_cluster_members_on_user_id`
+- `index_cluster_members_on_cluster_id_and_user_id` (unique)
+- `index_cluster_members_on_role`
+
+**Business Rules**:
+- Each user can be a member of a cluster only once
+- At least one owner must exist for every cluster
+- Role values are restricted to: 'owner', 'admin', 'member'
+- Owner role has full permissions (view, edit, delete, manage members, transfer ownership)
+- Admin role can manage members and edit but cannot delete or transfer ownership
+- Member role can only view
+- Comment field is optional for notes (e.g., "Technical lead", "External consultant")
+
+**Role Permissions**:
+```ruby
+# In Clusters::Cluster model
+include RoleBasedAccess
+
+ROLE_PERMISSIONS = {
+  owner: {
+    can_view: true,
+    can_edit: true,
+    can_delete: true,
+    can_manage_members: true,
+    can_change_owner: true
+  },
+  admin: {
+    can_view: true,
+    can_edit: true,
+    can_delete: false,
+    can_manage_members: true,
+    can_change_owner: false
+  },
+  member: {
+    can_view: true,
+    can_edit: false,
+    can_delete: false,
+    can_manage_members: false,
+    can_change_owner: false
+  }
+}.freeze
+
+def can?(user, action)
+  membership = cluster_members.find_by(user: user)
+  return false unless membership
+  
+  permissions = ROLE_PERMISSIONS[membership.role.to_sym]
+  permissions[:"can_#{action}"] == true
+end
+```
+
+**RLS Policy for ClusterMember**:
+```sql
+-- Users can see members of clusters they belong to
+CREATE POLICY cluster_member_isolation_policy ON clusters.cluster_members
+  USING (
+    cluster_id IN (
+      SELECT cluster_id 
+      FROM clusters.cluster_members
+      WHERE user_id = current_setting('request.jwt.claims', true)::json->>'sub'
+    )
+  );
+```
+
+---
+
+### 4. Clusters::Domain
 
 **Purpose**: Mid-level organizational unit within clusters
 
@@ -150,7 +271,7 @@ default_scope { active }
 
 ---
 
-### 4. Clusters::Resource
+### 5. Clusters::Resource
 
 **Purpose**: Lowest-level entity containing actual data/configuration
 
@@ -615,6 +736,204 @@ end
 
 ---
 
+## Row-Level Security (RLS) Policies
+
+### Overview
+
+PostgreSQL Row-Level Security (RLS) policies provide database-level data isolation. When enabled, queries automatically filter results based on the current user's JWT claims set in the session.
+
+### RLS Policy Implementation
+
+**Enable RLS on Tables**:
+```sql
+-- Enable RLS on all user-owned tables
+ALTER TABLE clusters.clusters ENABLE ROW LEVEL SECURITY;
+ALTER TABLE clusters.domains ENABLE ROW LEVEL SECURITY;
+ALTER TABLE clusters.resources ENABLE ROW LEVEL SECURITY;
+ALTER TABLE clusters.cluster_members ENABLE ROW LEVEL SECURITY;
+```
+
+**Cluster Isolation Policy**:
+```sql
+-- Users can only access clusters they are members of
+CREATE POLICY cluster_isolation_policy ON clusters.clusters
+  FOR ALL
+  USING (
+    id IN (
+      SELECT cluster_id 
+      FROM clusters.cluster_members 
+      WHERE user_id = current_setting('request.jwt.claims', true)::json->>'sub'
+    )
+  );
+```
+
+**Domain Isolation Policy**:
+```sql
+-- Users can only access domains in their clusters
+CREATE POLICY domain_isolation_policy ON clusters.domains
+  FOR ALL
+  USING (
+    id IN (
+      SELECT DISTINCT d.id 
+      FROM clusters.domains d
+      INNER JOIN clusters.cluster_domains cd ON cd.domain_id = d.id
+      INNER JOIN clusters.cluster_members cm ON cm.cluster_id = cd.cluster_id
+      WHERE cm.user_id = current_setting('request.jwt.claims', true)::json->>'sub'
+    )
+  );
+```
+
+**Resource Isolation Policy**:
+```sql
+-- Users can only access resources in their domains
+CREATE POLICY resource_isolation_policy ON clusters.resources
+  FOR ALL
+  USING (
+    id IN (
+      SELECT DISTINCT r.id 
+      FROM clusters.resources r
+      INNER JOIN clusters.domain_resources dr ON dr.resource_id = r.id
+      INNER JOIN clusters.cluster_domains cd ON cd.domain_id = dr.domain_id
+      INNER JOIN clusters.cluster_members cm ON cm.cluster_id = cd.cluster_id
+      WHERE cm.user_id = current_setting('request.jwt.claims', true)::json->>'sub'
+    )
+  );
+```
+
+**ClusterMember Isolation Policy**:
+```sql
+-- Users can see members of clusters they belong to
+CREATE POLICY cluster_member_isolation_policy ON clusters.cluster_members
+  FOR ALL
+  USING (
+    cluster_id IN (
+      SELECT cluster_id 
+      FROM clusters.cluster_members
+      WHERE user_id = current_setting('request.jwt.claims', true)::json->>'sub'
+    )
+  );
+```
+
+### Policy Migration Example
+
+```ruby
+# db/migrate/YYYYMMDDHHMMSS_enable_rls_for_clusters.rb
+class EnableRlsForClusters < ActiveRecord::Migration[7.0]
+  def up
+    # Enable RLS
+    execute <<-SQL
+      ALTER TABLE clusters.clusters ENABLE ROW LEVEL SECURITY;
+      ALTER TABLE clusters.domains ENABLE ROW LEVEL SECURITY;
+      ALTER TABLE clusters.resources ENABLE ROW LEVEL SECURITY;
+      ALTER TABLE clusters.cluster_members ENABLE ROW LEVEL SECURITY;
+    SQL
+    
+    # Create policies
+    execute <<-SQL
+      CREATE POLICY cluster_isolation_policy ON clusters.clusters
+        FOR ALL
+        USING (
+          id IN (
+            SELECT cluster_id 
+            FROM clusters.cluster_members 
+            WHERE user_id = current_setting('request.jwt.claims', true)::json->>'sub'
+          )
+        );
+      
+      CREATE POLICY domain_isolation_policy ON clusters.domains
+        FOR ALL
+        USING (
+          id IN (
+            SELECT DISTINCT d.id 
+            FROM clusters.domains d
+            INNER JOIN clusters.cluster_domains cd ON cd.domain_id = d.id
+            INNER JOIN clusters.cluster_members cm ON cm.cluster_id = cd.cluster_id
+            WHERE cm.user_id = current_setting('request.jwt.claims', true)::json->>'sub'
+          )
+        );
+      
+      -- Add other policies...
+    SQL
+  end
+  
+  def down
+    # Drop policies
+    execute <<-SQL
+      DROP POLICY IF EXISTS cluster_isolation_policy ON clusters.clusters;
+      DROP POLICY IF EXISTS domain_isolation_policy ON clusters.domains;
+      -- Drop other policies...
+    SQL
+    
+    # Disable RLS
+    execute <<-SQL
+      ALTER TABLE clusters.clusters DISABLE ROW LEVEL SECURITY;
+      ALTER TABLE clusters.domains DISABLE ROW LEVEL SECURITY;
+      ALTER TABLE clusters.resources DISABLE ROW LEVEL SECURITY;
+      ALTER TABLE clusters.cluster_members DISABLE ROW LEVEL SECURITY;
+    SQL
+  end
+end
+```
+
+### Testing RLS Policies
+
+```ruby
+# spec/support/rls_helpers.rb
+module RlsHelpers
+  def with_rls_context(user)
+    jwt_claims = { sub: user.id, email: user.email }
+    ActiveRecord::Base.connection.execute(
+      "SET LOCAL request.jwt.claims = '#{jwt_claims.to_json}'"
+    )
+    yield
+  ensure
+    ActiveRecord::Base.connection.execute("RESET request.jwt.claims")
+  end
+end
+
+# spec/models/clusters/cluster_spec.rb
+RSpec.describe Clusters::Cluster, type: :model do
+  describe 'RLS policies' do
+    let(:user1) { create(:user) }
+    let(:user2) { create(:user) }
+    let!(:cluster1) { create(:cluster, :with_owner, owner: user1) }
+    let!(:cluster2) { create(:cluster, :with_owner, owner: user2) }
+    
+    it 'isolates clusters by user' do
+      with_rls_context(user1) do
+        expect(Clusters::Cluster.all).to include(cluster1)
+        expect(Clusters::Cluster.all).not_to include(cluster2)
+      end
+      
+      with_rls_context(user2) do
+        expect(Clusters::Cluster.all).to include(cluster2)
+        expect(Clusters::Cluster.all).not_to include(cluster1)
+      end
+    end
+  end
+end
+```
+
+### RLS Best Practices
+
+1. **Always test policies**: Write comprehensive tests for all RLS policies
+2. **Use indexes**: Ensure subqueries in policies are indexed for performance
+3. **Document policies**: Add comments in migration explaining policy logic
+4. **Monitor performance**: Use `EXPLAIN ANALYZE` to check policy overhead
+5. **Fallback to app-level**: Keep application-level authorization as backup
+6. **Test with real data**: Verify policies work with production-like data volumes
+
+### Performance Considerations
+
+- RLS policies add overhead to every query
+- Index all columns used in policy subqueries
+- Consider materialized views for complex policies
+- Monitor query performance in production
+- Use `pg_stat_statements` to identify slow RLS queries
+
+---
+
 **Data Model Status**: ✅ COMPLETE  
+**RLS Policies**: ✅ DOCUMENTED  
 **Ready for Contract Generation**: YES  
 **Blockers**: NONE

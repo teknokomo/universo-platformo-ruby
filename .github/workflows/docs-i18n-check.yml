@@ -1,0 +1,57 @@
+name: Verify Bilingual Documentation
+
+on:
+  pull_request:
+    paths:
+      - '**/*.md'
+      - '**/README*.md'
+  push:
+    branches:
+      - main
+    paths:
+      - '**/*.md'
+      - '**/README*.md'
+
+jobs:
+  check-i18n-docs:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Set up Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '3.2'
+          
+      - name: Check bilingual documentation line counts
+        run: |
+          chmod +x tools/check_i18n_docs.rb
+          ruby tools/check_i18n_docs.rb
+        
+      - name: Comment on PR (if failed)
+        if: failure() && github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: `## ❌ Bilingual Documentation Check Failed
+              
+              The English and Russian documentation files have different line counts.
+              
+              **What to do:**
+              1. Run \`ruby tools/check_i18n_docs.rb\` locally to see which files are out of sync
+              2. Update the Russian files to match the English structure (same line count)
+              3. Commit and push your changes
+              
+              **Remember:**
+              - English files (README.md) are the PRIMARY source
+              - Russian files (README-RU.md) must have IDENTICAL line counts
+              - Every blank line, heading, and code block must match
+              
+              See [i18n documentation guidelines](.github/instructions/i18n-docs.md) for details.`
+            })
