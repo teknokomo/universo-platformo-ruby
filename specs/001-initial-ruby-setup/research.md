@@ -93,7 +93,349 @@ SUPABASE_CLIENT = Supabase::Client.new(
 
 ---
 
-### 3. Hotwire (Turbo + Stimulus) for Reactive Frontend
+### 3. PostgreSQL Row-Level Security (RLS) with Supabase
+
+**Decision**: Implement Row-Level Security at database level with JWT context propagation
+
+**Rationale**:
+- Defense-in-depth security: database-level authorization prevents data leaks even if application logic fails
+- Supabase natively supports RLS policies with JWT claims
+- Isolates user data at PostgreSQL level automatically
+- React implementation successfully uses this pattern
+- Complements application-level authorization guards
+- Simplifies multi-tenant data isolation
+
+**Alternatives Considered**:
+- **Application-only authorization**: Risk of data leaks from bugs, more complex code
+- **Database views per user**: Not scalable, complex to maintain
+- **Separate schemas per tenant**: Overkill for user-level isolation
+- **Manual tenant_id filtering**: Error-prone, easy to forget in queries
+
+**Implementation Pattern**:
+
+**Step 1: Configure RLS Policies**
+```sql
+-- Enable RLS on user-owned tables
+ALTER TABLE clusters.clusters ENABLE ROW LEVEL SECURITY;
+ALTER TABLE clusters.domains ENABLE ROW LEVEL SECURITY;
+ALTER TABLE clusters.resources ENABLE ROW LEVEL SECURITY;
+
+-- Create policy: users can only access their own clusters
+CREATE POLICY cluster_isolation_policy ON clusters.clusters
+  USING (
+    id IN (
+      SELECT cluster_id 
+      FROM clusters.cluster_users 
+      WHERE user_id = current_setting('request.jwt.claims', true)::json->>'sub'
+    )
+  );
+
+-- Similar policies for domains and resources
+CREATE POLICY domain_isolation_policy ON clusters.domains
+  USING (
+    id IN (
+      SELECT d.id 
+      FROM clusters.domains d
+      JOIN clusters.domain_clusters dc ON dc.domain_id = d.id
+      JOIN clusters.cluster_users cu ON cu.cluster_id = dc.cluster_id
+      WHERE cu.user_id = current_setting('request.jwt.claims', true)::json->>'sub'
+    )
+  );
+```
+
+**Step 2: Create Rails Middleware to Propagate JWT**
+```ruby
+# app/middleware/rls_context_middleware.rb
+class RlsContextMiddleware
+  def initialize(app)
+    @app = app
+  end
+
+  def call(env)
+    request = ActionDispatch::Request.new(env)
+    
+    if request.session[:jwt_token]
+      # Decode and verify JWT
+      jwt_claims = decode_jwt(request.session[:jwt_token])
+      
+      # Set PostgreSQL session variable
+      ActiveRecord::Base.connection.execute(
+        "SET LOCAL request.jwt.claims = '#{jwt_claims.to_json}'"
+      )
+    end
+    
+    @app.call(env)
+  end
+  
+  private
+  
+  def decode_jwt(token)
+    # Use Supabase JWT secret to verify and decode
+    JWT.decode(
+      token,
+      ENV['SUPABASE_JWT_SECRET'],
+      true,
+      { algorithm: 'HS256' }
+    ).first
+  end
+end
+```
+
+**Step 3: Register Middleware**
+```ruby
+# config/application.rb
+config.middleware.use RlsContextMiddleware
+```
+
+**Step 4: Use in Queries (Automatic)**
+```ruby
+# Queries automatically filtered by RLS
+Clusters::Cluster.all  # Returns only user's clusters
+# No need to manually add .where(user_id: current_user.id)
+```
+
+**Advantages**:
+- **Security**: Impossible to accidentally expose other users' data
+- **Simplicity**: No manual tenant filtering in every query
+- **Performance**: Database-level filtering is optimized
+- **Audit**: All access controlled by auditable policies
+
+**Challenges**:
+- **Testing**: Need to set JWT context in tests
+- **Debugging**: Policy issues harder to debug than application code
+- **Complexity**: Requires understanding of PostgreSQL policies
+- **Migrations**: Policy creation must be in migrations
+
+**Best Practices**:
+- Always test RLS policies thoroughly
+- Create helper methods for common policy patterns
+- Document all RLS policies in migration files
+- Provide fallback to application-level authorization
+- Monitor policy performance with database metrics
+- Use descriptive policy names for maintainability
+
+**Testing Strategy**:
+```ruby
+# spec/support/rls_helpers.rb
+module RlsHelpers
+  def with_rls_context(user)
+    jwt_token = generate_jwt_for_user(user)
+    ActiveRecord::Base.connection.execute(
+      "SET LOCAL request.jwt.claims = '#{jwt_token}'"
+    )
+    yield
+  ensure
+    ActiveRecord::Base.connection.execute(
+      "RESET request.jwt.claims"
+    )
+  end
+end
+
+# In specs
+RSpec.describe Clusters::Cluster, type: :model do
+  let(:user) { create(:user) }
+  let(:other_user) { create(:user) }
+  
+  it "isolates data via RLS" do
+    cluster = create(:cluster, :with_owner, owner: user)
+    other_cluster = create(:cluster, :with_owner, owner: other_user)
+    
+    with_rls_context(user) do
+      expect(Clusters::Cluster.all).to include(cluster)
+      expect(Clusters::Cluster.all).not_to include(other_cluster)
+    end
+  end
+end
+```
+
+**React Implementation Reference**:
+- `auth-srv/base/src/middlewares/ensureAuthWithRls.ts` - Creates QueryRunner per request
+- `auth-srv/base/src/utils/rlsContext.ts` - Applies JWT context to database session
+- Uses TypeORM's QueryRunner for per-request isolation
+- Sets PostgreSQL session variables for RLS evaluation
+
+**Rails Adaptation Notes**:
+- Rails uses connection pooling, so session variables must be request-scoped
+- Use `SET LOCAL` instead of `SET` to limit scope to current transaction
+- Consider using `ActiveRecord::Base.connection_pool.with_connection` for isolation
+- Middleware approach is simpler than per-request connections
+
+---
+
+### 4. Role-Based Authorization System
+
+**Decision**: Implement three-tier role system (owner/admin/member) with permission checking
+
+**Rationale**:
+- React implementation has proven role-based pattern
+- Three roles provide sufficient granularity for most use cases
+- Clear permission matrix is easy to understand and audit
+- Complements RLS (application checks permissions, RLS enforces data access)
+- Supports team collaboration features
+
+**Alternatives Considered**:
+- **No roles (owner only)**: Too restrictive for collaboration
+- **Fine-grained ACLs**: Over-engineered for current needs
+- **Pundit/CanCanCan gems**: Add complexity, custom solution is clearer
+- **Five+ roles**: Unnecessarily complex
+
+**Role Permissions Matrix**:
+
+| Action | Owner | Admin | Member |
+|--------|-------|-------|--------|
+| View cluster | ✓ | ✓ | ✓ |
+| Edit cluster | ✓ | ✓ | ✗ |
+| Delete cluster | ✓ | ✗ | ✗ |
+| Manage members | ✓ | ✓ | ✗ |
+| Change ownership | ✓ | ✗ | ✗ |
+| Add domains | ✓ | ✓ | ✗ |
+| Remove domains | ✓ | ✓ | ✗ |
+
+**Implementation Pattern**:
+```ruby
+# app/models/concerns/role_based_access.rb
+module RoleBasedAccess
+  extend ActiveSupport::Concern
+  
+  ROLE_PERMISSIONS = {
+    owner: {
+      can_view: true,
+      can_edit: true,
+      can_delete: true,
+      can_manage_members: true,
+      can_change_owner: true
+    },
+    admin: {
+      can_view: true,
+      can_edit: true,
+      can_delete: false,
+      can_manage_members: true,
+      can_change_owner: false
+    },
+    member: {
+      can_view: true,
+      can_edit: false,
+      can_delete: false,
+      can_manage_members: false,
+      can_change_owner: false
+    }
+  }.freeze
+  
+  def can?(user, action)
+    membership = cluster_members.find_by(user: user)
+    return false unless membership
+    
+    permissions = ROLE_PERMISSIONS[membership.role.to_sym]
+    permissions[:"can_#{action}"] == true
+  end
+  
+  def role_for(user)
+    cluster_members.find_by(user: user)&.role
+  end
+end
+```
+
+**Controller Authorization**:
+```ruby
+# app/controllers/concerns/authorization.rb
+module Authorization
+  extend ActiveSupport::Concern
+  
+  private
+  
+  def authorize_action!(resource, action)
+    unless resource.can?(current_user, action)
+      render json: {
+        success: false,
+        error: "You don't have permission to #{action} this resource"
+      }, status: :forbidden
+    end
+  end
+  
+  def require_role!(resource, *allowed_roles)
+    role = resource.role_for(current_user)
+    unless allowed_roles.map(&:to_s).include?(role)
+      render json: {
+        success: false,
+        error: "This action requires #{allowed_roles.join(' or ')} role"
+      }, status: :forbidden
+    end
+  end
+end
+```
+
+**Usage in Controllers**:
+```ruby
+class Clusters::ClustersController < ApplicationController
+  include Authorization
+  
+  before_action :set_cluster, only: [:show, :update, :destroy]
+  before_action -> { authorize_action!(@cluster, :view) }, only: [:show]
+  before_action -> { authorize_action!(@cluster, :edit) }, only: [:update]
+  before_action -> { authorize_action!(@cluster, :delete) }, only: [:destroy]
+  
+  def update
+    if @cluster.update(cluster_params)
+      render json: { success: true, data: @cluster }
+    else
+      render_validation_error(@cluster)
+    end
+  end
+  
+  def destroy
+    # Additional check: prevent deleting cluster with domains
+    if @cluster.domains.any?
+      return render json: {
+        success: false,
+        error: 'Cannot delete cluster with domains'
+      }, status: :unprocessable_entity
+    end
+    
+    @cluster.destroy
+    head :no_content
+  end
+end
+```
+
+**Model Validations**:
+```ruby
+class Clusters::ClusterMember < ApplicationRecord
+  belongs_to :cluster
+  belongs_to :user
+  
+  validates :role, presence: true, inclusion: { in: %w[owner admin member] }
+  validates :user_id, uniqueness: { scope: :cluster_id }
+  
+  validate :at_least_one_owner
+  
+  private
+  
+  def at_least_one_owner
+    if role_was == 'owner' && role != 'owner'
+      # Trying to remove owner role
+      remaining_owners = cluster.cluster_members
+        .where(role: 'owner')
+        .where.not(id: id)
+        .count
+      
+      if remaining_owners < 1
+        errors.add(:role, 'Cannot remove last owner')
+      end
+    end
+  end
+end
+```
+
+**Best Practices**:
+- Always check permissions before data access (defense in depth with RLS)
+- Use descriptive action names (view, edit, delete, manage_members)
+- Audit all role changes
+- Prevent removal of last owner
+- Test all permission combinations
+
+---
+
+### 5. Hotwire (Turbo + Stimulus) for Reactive Frontend
 
 **Decision**: Use Hotwire as primary frontend framework
 
@@ -143,7 +485,7 @@ SUPABASE_CLIENT = Supabase::Client.new(
 
 ---
 
-### 4. ViewComponent for Reusable UI Components
+### 6. ViewComponent for Reusable UI Components
 
 **Decision**: Use ViewComponent gem for UI component library
 
@@ -189,7 +531,7 @@ end
 
 ---
 
-### 5. Tailwind CSS with Material Design Theme
+### 7. Tailwind CSS with Material Design Theme
 
 **Decision**: Use Tailwind CSS v3 with custom Material Design configuration
 
@@ -244,7 +586,7 @@ module.exports = {
 
 ---
 
-### 6. Testing Strategy: RSpec + FactoryBot + Capybara
+### 8. Testing Strategy: RSpec + FactoryBot + Capybara
 
 **Decision**: Full testing stack with RSpec as primary framework
 
@@ -319,7 +661,7 @@ end
 
 ---
 
-### 7. Code Quality: RuboCop + Brakeman + Bundler-audit
+### 9. Code Quality: RuboCop + Brakeman + Bundler-audit
 
 **Decision**: Three-tool approach for code quality
 
@@ -365,7 +707,7 @@ jobs:
 
 ---
 
-### 8. Bilingual Documentation Strategy
+### 10. Bilingual Documentation Strategy
 
 **Decision**: Parallel English/Russian files with automated verification
 
@@ -422,7 +764,7 @@ exit $errors
 
 ---
 
-### 9. GitHub Workflow Configuration
+### 11. GitHub Workflow Configuration
 
 **Decision**: Comprehensive GitHub workflow with templates and automation
 
@@ -471,7 +813,7 @@ exit $errors
 
 ---
 
-### 10. Clusters Package Architecture (Reference Implementation)
+### 12. Clusters Package Architecture (Reference Implementation)
 
 **Decision**: Three-entity hierarchy with Rails Engine isolation
 
