@@ -1,7 +1,7 @@
 # Tasks: Initial Platform Setup for Ruby Implementation
 
 **Feature Branch**: `001-initial-ruby-setup`  
-**Input**: Design documents from `/specs/001-initial-ruby-setup/`  
+**Input**: Design documents from `/.specify/specs/001-initial-ruby-setup/`  
 **Prerequisites**: plan.md, spec.md, data-model.md, contracts/clusters-api.md, quickstart.md
 
 **Tests**: Not explicitly requested in specification - testing infrastructure will be set up but test writing is deferred to implementation phase.
