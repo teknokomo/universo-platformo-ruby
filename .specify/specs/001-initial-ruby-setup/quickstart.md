@@ -507,9 +507,9 @@ alias rails='bundle exec rails'
 Now that you have Universo Platformo Ruby running:
 
 1. **Read the Documentation**:
-   - [README.md](../README.md) - Project overview
-   - [CONTRIBUTING.md](../CONTRIBUTING.md) - How to contribute
-   - [DEVELOPMENT.md](../DEVELOPMENT.md) - Development guide
+   - [README.md](../../README.md) - Project overview
+   - [CONTRIBUTING.md](../../CONTRIBUTING.md) - How to contribute
+   - [DEVELOPMENT.md](../../DEVELOPMENT.md) - Development guide
 
 2. **Explore the Code**:
    - `app/` - Main application code
@@ -533,8 +533,8 @@ Now that you have Universo Platformo Ruby running:
 If you encounter issues not covered in this guide:
 
 1. **Check existing documentation**:
-   - [README.md](../README.md)
-   - [Troubleshooting Guide](../TROUBLESHOOTING.md) (if exists)
+   - [README.md](../../README.md)
+   - [Troubleshooting Guide](../../TROUBLESHOOTING.md) (if exists)
 
 2. **Search existing issues**:
    - [GitHub Issues](https://github.com/teknokomo/universo-platformo-ruby/issues)
