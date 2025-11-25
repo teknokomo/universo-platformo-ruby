@@ -576,3 +576,156 @@ Each task contributes to one or more success criteria from spec.md:
 **Estimated Full Implementation**: All 225 tasks
 
 **Format Validation**: ✅ All tasks follow format: `- [ ] [ID] [P?] [Story?] Description with file path`
+
+---
+
+## Future Package Roadmap
+
+**Status**: Planning phase - these packages will be implemented in subsequent feature branches
+
+**Reference**: Based on React repository structure at https://github.com/teknokomo/universo-platformo-react/tree/main/packages
+
+### Package Categories Overview
+
+The full Universo Platformo implementation consists of multiple package categories that build upon the foundational setup completed in Phases 1-9:
+
+#### Category 1: Core Business Entities (After Phase 9)
+- **Profile** (`profile-frt/srv`) - User profile management
+- **Organizations** (`organizations-frt/srv`) - Organization/team management  
+- **Uniks** (`uniks-frt/srv`) - Extended hierarchy for user workspaces
+- **Metaverses** (`metaverses-frt/srv`) - Virtual world organizational units
+- **Projects** (`projects-frt/srv`) - Project management within organizations
+
+#### Category 2: Space & Content Creation
+- **Spaces** (`spaces-frt/srv`) - 3D environment management
+- **Space Builder** (`space-builder-frt/srv`) - Visual 3D space editor
+- **Storages** (`storages-frt/srv`) - Asset storage and management
+
+#### Category 3: Node-Based Systems (Most Complex)
+- **Flowise Components** → **LangChain Nodes** (`langchain-nodes-srv`) - LangChain operation nodes
+- **UPDL** (`updl/base`) - Universal Platform Description Language nodes
+- **Flowise Server** → **Node Execution Engine** (`node-engine-srv`) - Node graph execution
+- **Flowise UI** → **Node Canvas** (`node-canvas-frt`) - Visual node graph editor
+
+#### Category 4: Publishing & Deployment  
+- **Publish** (`publish-frt/srv`) - Content publishing and deployment system
+
+#### Category 5: Analytics & Monitoring
+- **Analytics** (`analytics-frt`) - Analytics dashboards and reporting
+
+#### Category 6: Advanced Features
+- **Multiplayer** (`multiplayer-srv`) - Real-time multiplayer via ActionCable (not Colyseus)
+- **Templates** (`template-*`) - Pre-built application templates
+
+### Implementation Priority Order
+
+**Phase 10-15: Core Business Entities** (Next priority after initial setup)
+- Phase 10: Profile Package
+- Phase 11: Organizations Package  
+- Phase 12: Metaverses Package
+- Phase 13: Uniks Package
+- Phase 14: Projects Package
+
+**Phase 16-19: Space & Content**
+- Phase 16: Spaces Package
+- Phase 17: Space Builder Package  
+- Phase 18: Storages Package
+
+**Phase 20-24: Node-Based Systems** (Most complex, requires all previous)
+- Phase 20: Node System Architecture Planning
+- Phase 21: LangChain Nodes Package
+- Phase 22: UPDL Nodes Package  
+- Phase 23: Node Execution Engine
+- Phase 24: Node Canvas UI
+
+**Phase 25-27: Publishing & Analytics**
+- Phase 25: Publish Package
+- Phase 26: Analytics Package
+
+**Phase 28+: Advanced Features**
+- Phase 28: Multiplayer Package
+- Phase 29+: Template Packages
+
+### Key Architectural Principles for Future Packages
+
+1. **Avoid Flowise Legacy Code**: The React repo contains monolithic Flowise packages that should NOT be ported as-is. Instead:
+   - Break Flowise components into smaller, focused packages
+   - Separate LangChain-specific nodes from UPDL nodes
+   - Create clean Rails engine structure for each node type
+   
+2. **Frontend/Backend Separation**: Each package should have:
+   - `-srv` package for backend logic (Rails Engine)
+   - `-frt` package for frontend components (ViewComponents + Stimulus)
+   
+3. **Package Independence**: Each package should be:
+   - Independently deployable as a gem
+   - Testable in isolation
+   - Documented with bilingual README (EN/RU)
+   
+4. **Incremental Delivery**: After Phase 9 (Clusters complete):
+   - Each subsequent phase delivers a complete, working feature
+   - Phases can be prioritized based on business needs
+   - Early phases (10-15) provide immediate business value
+   - Later phases (20-24) enable advanced node-based programming
+
+### Node System Architecture Notes
+
+The node-based system (Phases 20-24) is the most complex part of the platform and requires special planning:
+
+**Current State in React Repo (Legacy)**:
+- `flowise-components`: Monolithic package with all node types mixed together
+- `flowise-server`: Complex server with node execution, storage, and API
+- `flowise-ui`: Large UI package with node editor and many other features
+
+**Planned Ruby Architecture (Clean Separation)**:
+- `langchain-nodes-srv`: LangChain-specific nodes (Chat Models, Chains, Agents, Tools, etc.)
+- `updl-nodes-srv`: UPDL custom nodes for platform-specific operations  
+- `node-engine-srv`: Generic node graph execution engine (language-agnostic)
+- `node-canvas-frt`: Visual node graph editor UI (ViewComponent + Stimulus + Canvas API)
+- `node-types`: Shared type definitions and interfaces for all node systems
+
+**Why This Structure is Better**:
+1. **Clear separation of concerns**: LangChain nodes don't mix with UPDL nodes
+2. **Reusability**: Node execution engine can run any node type
+3. **Testing**: Each node type package can be tested independently
+4. **Deployment**: Can deploy LangChain nodes without UPDL or vice versa
+5. **Maintainability**: Smaller packages are easier to understand and modify
+
+### Feature Parity vs Code Parity Reminder
+
+As documented in plan.md and research.md:
+
+- ✅ **Goal**: Feature parity with React implementation
+- ❌ **NOT Goal**: Code parity or direct translation
+
+**This means**:
+- Same user-facing functionality and features
+- Different implementation using Rails best practices
+- Cleaner architecture than current React structure
+- No porting of Flowise legacy patterns
+- Rails-idiomatic solutions over React patterns
+
+### Creating New Feature Branches
+
+When ready to implement phases beyond Phase 9:
+
+1. **Review React implementation** for feature understanding (not code copying)
+2. **Create new feature spec** using `/speckit.specify` command
+3. **Generate implementation plan** using `/speckit.plan` command  
+4. **Generate tasks** using `/speckit.tasks` command
+5. **Implement following Rails conventions** and package patterns from Clusters
+6. **Test independently** before integration
+7. **Update FEATURE_PARITY.md** to track implementation status
+
+### References
+
+- **React Repository**: https://github.com/teknokomo/universo-platformo-react
+- **React Packages**: https://github.com/teknokomo/universo-platformo-react/tree/main/packages  
+- **Flowise Components**: https://github.com/teknokomo/universo-platformo-react/tree/main/packages/flowise-components
+- **UPDL Package**: https://github.com/teknokomo/universo-platformo-react/tree/main/packages/updl
+
+---
+
+**Roadmap Status**: ✅ Documented and prioritized  
+**Next Phase After Phase 9**: Phase 10 - Profile Package  
+**Total Estimated Phases**: 29+ phases covering all functionality
