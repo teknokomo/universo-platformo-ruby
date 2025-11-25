@@ -185,29 +185,27 @@ This is a Rails monorepo using Engines for package management:
 
 ---
 
-## Phase 5.5: Row-Level Security Setup (Required for FR-087 to FR-095)
+## Phase 5.5: Row-Level Security Infrastructure (Required for FR-087 to FR-095)
 
-**Goal**: Implement PostgreSQL Row-Level Security (RLS) policies for data isolation at database level
+**Goal**: Set up PostgreSQL Row-Level Security (RLS) infrastructure and middleware
 
 **Purpose**: Defense-in-depth security - database-level authorization prevents data leaks even if application logic fails
 
 **Dependencies**: User Story 3 (Database Integration) must be complete
 
-### Implementation for RLS
+**Note**: This phase creates the RLS infrastructure (middleware, helpers). Package-specific RLS policies are created in each package's migration (e.g., Clusters creates its policies in Phase 8).
 
-- [ ] T097.1 [P] Create `db/migrate/YYYYMMDDHHMMSS_enable_rls_for_clusters.rb` migration to enable RLS on clusters tables
-- [ ] T097.2 [P] Create `db/migrate/YYYYMMDDHHMMSS_create_cluster_rls_policies.rb` with isolation policies
-- [ ] T097.3 [P] Create `app/middleware/rls_context_middleware.rb` to propagate JWT claims to PostgreSQL session
-- [ ] T097.4 [US3] Configure RLS middleware in `config/application.rb` for API routes
-- [ ] T097.5 [P] Create `spec/support/rls_helpers.rb` for RLS testing helpers (with_rls_context)
-- [ ] T097.6 [P] Create `spec/integration/rls_isolation_spec.rb` tests for RLS policy verification
-- [ ] T097.7 [US3] Document RLS setup in DEVELOPMENT.md section "Row-Level Security Configuration"
-- [ ] T097.8 [US3] Update DEVELOPMENT-RU.md with matching RLS documentation
-- [ ] T097.9 [US3] Verify RLS policies prevent cross-user data access in tests
+### Implementation for RLS Infrastructure
 
-**Note**: RLS policies will be created for each package's tables. The Clusters package (Phase 8) will be the first to implement RLS policies on its tables.
+- [ ] T097.1 [P] Create `app/middleware/rls_context_middleware.rb` to propagate JWT claims to PostgreSQL session
+- [ ] T097.2 [US3] Configure RLS middleware in `config/application.rb` for API routes
+- [ ] T097.3 [P] Create `spec/support/rls_helpers.rb` for RLS testing helpers (with_rls_context)
+- [ ] T097.4 [P] Create `spec/integration/rls_isolation_spec.rb` base tests for RLS policy verification
+- [ ] T097.5 [US3] Document RLS setup in DEVELOPMENT.md section "Row-Level Security Configuration"
+- [ ] T097.6 [US3] Update DEVELOPMENT-RU.md with matching RLS documentation
+- [ ] T097.7 [US3] Verify RLS middleware correctly sets PostgreSQL session variables
 
-**Checkpoint**: RLS infrastructure ready - database-level security configured
+**Checkpoint**: RLS infrastructure ready - middleware and test helpers configured
 
 ---
 
@@ -331,7 +329,7 @@ This is a Rails monorepo using Engines for package management:
 - [ ] T163 [P] [US6] Create migration `db/migrate/YYYYMMDDHHMMSS_create_clusters_resources.rb` for resources table
 - [ ] T164 [P] [US6] Create migration `db/migrate/YYYYMMDDHHMMSS_create_clusters_junction_tables.rb` for ClusterDomain and DomainResource
 - [ ] T165 [P] [US6] Create migration `db/migrate/YYYYMMDDHHMMSS_create_clusters_cluster_members.rb` for cluster members with roles
-- [ ] T166 [P] [US6] Create migration `db/migrate/YYYYMMDDHHMMSS_enable_rls_for_clusters_tables.rb` for RLS policies on clusters tables
+- [ ] T166 [P] [US6] Create migration `db/migrate/YYYYMMDDHHMMSS_create_clusters_rls_policies.rb` to enable RLS and create isolation policies for clusters tables
 - [ ] T167 [US6] Run migrations with `rails db:migrate`
 - [ ] T168 [P] [US6] Create `packages/clusters-srv/base/app/models/clusters/cluster.rb` model with validations and associations
 - [ ] T169 [P] [US6] Create `packages/clusters-srv/base/app/models/clusters/domain.rb` model with validations and associations
@@ -620,12 +618,12 @@ Each task contributes to one or more success criteria from spec.md:
 - **SC-008** (Database uptime): T085-T097 (health monitoring)
 - **SC-009** (Auth success rate): T098-T137 (robust auth-srv/auth-frt implementation)
 - **SC-010** (Visual consistency): T138-T158 (Material Design components)
-- **SC-011** (Security): T232-T233, T044-T045, T097.1-T097.9 (Brakeman, Bundler-audit, CI, RLS)
+- **SC-011** (Security): T232-T233, T044-T045, T097.1-T097.7 (Brakeman, Bundler-audit, CI, RLS infrastructure)
 - **SC-012** (Responsive design): T154 (viewport testing)
 - **SC-013** (i18n verification): T017-T018, T234 (automated checks for all README pairs)
 - **SC-014** (CI/CD checks): T044-T046, T243 (all workflows)
 - **SC-015** (Package creation time): T058-T084 (streamlined process)
-- **SC-016** (RLS data isolation): T097.1-T097.9, T166, T209, T226 (RLS infrastructure and tests)
+- **SC-016** (RLS data isolation): T097.1-T097.7, T166, T209, T226 (RLS infrastructure, policies, and tests)
 
 ---
 
@@ -648,16 +646,19 @@ Each task contributes to one or more success criteria from spec.md:
 
 ---
 
-**Total Tasks**: 248  
-**Parallelizable Tasks**: ~140 (56%)  
+**Total Tasks**: 255  
+**Parallelizable Tasks**: 155 (61%)  
 **Estimated MVP (US1-2)**: 84 tasks  
-**Estimated Full Implementation**: All 248 tasks
+**Estimated Full Implementation**: All 255 tasks
 
-**New in this revision**:
-- Added Phase 5.5 for RLS setup (T097.1-T097.9)
-- Refactored US4 (Auth) to create auth-srv and auth-frt packages (T098-T137)
-- Added RLS migrations and tests to US6 (Clusters) (T166, T209, T226)
+**Changes in this revision**:
+- Added Phase 5.5 for RLS infrastructure setup (T097.1-T097.7) - middleware and test helpers
+- Refactored US4 (Auth) to create auth-srv and auth-frt packages (T098-T137) - adds 20 new tasks for dedicated auth packages
+- Added RLS policy migration to US6 (Clusters) (T166) - package-specific RLS policies
+- Added RLS isolation test task to US6 (T209)
+- Added RLS data isolation manual test (T226)
 - Updated task numbering throughout (T138-T248)
+- Parallelizable task count increased from ~120 to 155 due to additional parallel tasks in auth-srv, auth-frt packages
 
 **Format Validation**: ✅ All tasks follow format: `- [ ] [ID] [P?] [Story?] Description with file path`
 
