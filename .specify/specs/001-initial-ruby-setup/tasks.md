@@ -185,11 +185,11 @@ This is a Rails monorepo using Engines for package management:
 
 ---
 
-## Phase 5.5: Row-Level Security Infrastructure (Required for FR-087 to FR-095)
+## Phase 5.5: Row-Level Security Infrastructure (Required for spec.md FR-087 to FR-095)
 
 **Goal**: Set up PostgreSQL Row-Level Security (RLS) infrastructure and middleware
 
-**Purpose**: Defense-in-depth security - database-level authorization prevents data leaks even if application logic fails
+**Purpose**: Defense-in-depth security - database-level authorization prevents data leaks even if application logic fails. See research.md "PostgreSQL Row-Level Security (RLS) with Supabase" section for design rationale.
 
 **Dependencies**: User Story 3 (Database Integration) must be complete
 
@@ -217,14 +217,14 @@ This is a Rails monorepo using Engines for package management:
 
 **Dependencies**: User Story 3 (database for session storage if needed)
 
-**Note**: Authentication is implemented as a package (auth-srv, auth-frt) to match React repository structure at https://github.com/teknokomo/universo-platformo-react/tree/main/packages/auth-srv
+**Reference**: Authentication package structure based on React repository (teknokomo/universo-platformo-react packages/auth-srv)
 
 ### Implementation for User Story 4
 
 #### Auth Server Package (auth-srv)
 
 - [ ] T098 [P] [US4] Create `packages/auth-srv/` directory structure
-- [ ] T099 [US4] Generate auth-srv Rails Engine: `cd packages/auth-srv/base && rails plugin new . --mountable --skip-git`
+- [ ] T099 [US4] Generate auth-srv Rails Engine (from repo root): `rails plugin new packages/auth-srv/base --mountable --skip-git`
 - [ ] T100 [US4] Configure `packages/auth-srv/base/auth_srv.gemspec` with Supabase dependencies
 - [ ] T101 [P] [US4] Create `packages/auth-srv/base/lib/auth_srv/supabase_client.rb` for Supabase Auth API wrapper
 - [ ] T102 [P] [US4] Create `packages/auth-srv/base/app/services/auth_srv/authentication_service.rb` for sign_up, sign_in, sign_out, verify_token
@@ -243,7 +243,7 @@ This is a Rails monorepo using Engines for package management:
 #### Auth Frontend Package (auth-frt)
 
 - [ ] T114 [P] [US4] Create `packages/auth-frt/` directory structure
-- [ ] T115 [US4] Generate auth-frt Rails Engine: `cd packages/auth-frt/base && rails plugin new . --mountable --skip-git`
+- [ ] T115 [US4] Generate auth-frt Rails Engine (from repo root): `rails plugin new packages/auth-frt/base --mountable --skip-git`
 - [ ] T116 [P] [US4] Create `packages/auth-frt/base/app/components/auth_frt/login_form_component.rb` ViewComponent
 - [ ] T117 [P] [US4] Create `packages/auth-frt/base/app/components/auth_frt/signup_form_component.rb` ViewComponent
 - [ ] T118 [P] [US4] Create `packages/auth-frt/base/app/components/auth_frt/password_reset_component.rb` ViewComponent
@@ -323,7 +323,7 @@ This is a Rails monorepo using Engines for package management:
 #### Models and Database
 
 - [ ] T159 [P] [US6] Create `packages/clusters-srv/` directory structure
-- [ ] T160 [US6] Generate clusters-srv Rails Engine: `cd packages/clusters-srv/base && rails plugin new . --mountable --skip-git`
+- [ ] T160 [US6] Generate clusters-srv Rails Engine (from repo root): `rails plugin new packages/clusters-srv/base --mountable --skip-git`
 - [ ] T161 [P] [US6] Create migration `db/migrate/YYYYMMDDHHMMSS_create_clusters_clusters.rb` for clusters table
 - [ ] T162 [P] [US6] Create migration `db/migrate/YYYYMMDDHHMMSS_create_clusters_domains.rb` for domains table
 - [ ] T163 [P] [US6] Create migration `db/migrate/YYYYMMDDHHMMSS_create_clusters_resources.rb` for resources table
@@ -354,7 +354,7 @@ This is a Rails monorepo using Engines for package management:
 #### Views and Components
 
 - [ ] T184 [P] [US6] Create `packages/clusters-frt/` directory structure  
-- [ ] T185 [US6] Generate clusters-frt Rails Engine: `cd packages/clusters-frt/base && rails plugin new . --mountable --skip-git`
+- [ ] T185 [US6] Generate clusters-frt Rails Engine (from repo root): `rails plugin new packages/clusters-frt/base --mountable --skip-git`
 - [ ] T186 [P] [US6] Create `packages/clusters-frt/base/app/components/clusters/cluster_card_component.rb` ViewComponent
 - [ ] T187 [P] [US6] Create `packages/clusters-frt/base/app/components/clusters/cluster_list_component.rb` ViewComponent
 - [ ] T188 [P] [US6] Create `packages/clusters-frt/base/app/components/clusters/cluster_form_component.rb` ViewComponent
