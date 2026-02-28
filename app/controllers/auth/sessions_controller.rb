@@ -1,24 +1,26 @@
-# Auth::SessionsController - Handles Supabase authentication (login/register/logout)
+# Auth::SessionsController - HTML form-based Supabase authentication
 #
 # Routes:
-# GET  /auth/sign-in  -> new     (shows login/register form)
-# POST /auth/sign-in  -> create  (processes login)
-# GET  /auth/sign-up  -> sign_up (shows registration form)
-# POST /auth/sign-up  -> register (processes registration)
-# DELETE /auth/sign-out -> destroy (processes logout)
+#   GET    /auth/sign-in  -> new      (sign-in form)
+#   POST   /auth/sign-in  -> create   (process sign-in)
+#   GET    /auth/sign-up  -> sign_up  (sign-up form)
+#   POST   /auth/sign-up  -> register (process sign-up)
+#   DELETE /auth/sign-out -> destroy  (sign-out)
+#
+# Security note: HTML forms include CSRF tokens via Rails' form_with helper,
+# so no skip_before_action is needed here.
 class Auth::SessionsController < ApplicationController
-  # HTML form submissions include CSRF tokens via Rails' form_with helper,
-  # so CSRF protection is not skipped here. The ApplicationController's
-  # protect_from_forgery with: :exception handles all non-JSON requests.
-
   def new
-    # Redirect authenticated users away from the auth page
     redirect_to root_path if user_signed_in?
   end
 
-  # Process login via Supabase
+  def sign_up
+    redirect_to root_path if user_signed_in?
+  end
+
+  # Process sign-in via Supabase
   def create
-    email = params[:email]&.strip
+    email    = params[:email]&.strip
     password = params[:password]
 
     unless email.present? && password.present?
@@ -29,10 +31,10 @@ class Auth::SessionsController < ApplicationController
     result = SupabaseAuthService.sign_in(email: email, password: password)
 
     if result[:success]
-      session[:user_id] = result[:user][:id]
-      session[:user_email] = result[:user][:email]
+      reset_session                                 # prevent session fixation
+      session[:user_id]      = result[:user][:id]
+      session[:user_email]   = result[:user][:email]
       session[:access_token] = result[:access_token]
-
       redirect_to root_path, notice: t('auth.messages.signed_in')
     else
       flash.now[:alert] = result[:error] || t('auth.errors.sign_in_failed')
@@ -40,16 +42,10 @@ class Auth::SessionsController < ApplicationController
     end
   end
 
-  # Show registration form (renders new template with sign_up mode)
-  def sign_up
-    redirect_to root_path if user_signed_in?
-    render :sign_up
-  end
-
   # Process registration via Supabase
   def register
-    email = params[:email]&.strip
-    password = params[:password]
+    email                 = params[:email]&.strip
+    password              = params[:password]
     password_confirmation = params[:password_confirmation]
 
     unless email.present? && password.present?
@@ -66,11 +62,11 @@ class Auth::SessionsController < ApplicationController
 
     if result[:success]
       if result[:confirmation_required]
-        redirect_to auth_sign_in_path,
-          notice: t('auth.messages.check_email')
+        redirect_to auth_sign_in_path, notice: t('auth.messages.check_email')
       else
-        session[:user_id] = result[:user][:id]
-        session[:user_email] = result[:user][:email]
+        reset_session                                 # prevent session fixation
+        session[:user_id]      = result[:user][:id]
+        session[:user_email]   = result[:user][:email]
         session[:access_token] = result[:access_token]
         redirect_to root_path, notice: t('auth.messages.signed_up')
       end
@@ -80,16 +76,10 @@ class Auth::SessionsController < ApplicationController
     end
   end
 
-  # Process logout
+  # Sign out: invalidate Supabase token, then clear the local session
   def destroy
-    if session[:access_token].present?
-      SupabaseAuthService.sign_out(access_token: session[:access_token])
-    end
-
-    session.delete(:user_id)
-    session.delete(:user_email)
-    session.delete(:access_token)
-
+    SupabaseAuthService.sign_out(access_token: session[:access_token]) if session[:access_token].present?
+    reset_session
     redirect_to root_path, notice: t('auth.messages.signed_out')
   end
 end
