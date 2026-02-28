@@ -7,7 +7,9 @@
 # POST /auth/sign-up  -> register (processes registration)
 # DELETE /auth/sign-out -> destroy (processes logout)
 class Auth::SessionsController < ApplicationController
-  skip_before_action :verify_authenticity_token, only: [:create, :register, :destroy]
+  # HTML form submissions include CSRF tokens via Rails' form_with helper,
+  # so CSRF protection is not skipped here. The ApplicationController's
+  # protect_from_forgery with: :exception handles all non-JSON requests.
 
   def new
     # Redirect authenticated users away from the auth page

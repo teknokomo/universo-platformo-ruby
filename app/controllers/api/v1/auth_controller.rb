@@ -7,7 +7,11 @@
 # GET  /api/v1/auth/csrf     -> csrf    (CSRF token)
 # GET  /api/v1/auth/me       -> me      (current user info)
 class Api::V1::AuthController < ApplicationController
-  skip_before_action :verify_authenticity_token, only: [:create, :register, :destroy]
+  # JSON requests are handled by ApplicationController's
+  # protect_from_forgery with: :null_session, if: :json_request?
+  # which resets the session instead of raising an exception.
+  # Clients should obtain a CSRF token via GET /api/v1/auth/csrf and
+  # include it as the X-CSRF-Token header in state-changing requests.
 
   # GET /api/v1/auth/csrf
   # Returns CSRF token for use in subsequent requests
