@@ -50,3 +50,83 @@ ru:
       not_found: "%{model} не найден."
       unauthorized: "У вас нет прав для выполнения этого действия."
       validation: "Пожалуйста, исправьте ошибки ниже."
+
+  # Аутентификация
+  auth:
+    sign_in: "Войти"
+    sign_up: "Зарегистрироваться"
+    sign_out: "Выйти"
+    welcome_back: "Добро пожаловать"
+    create_account: "Создать аккаунт"
+    sign_in_subtitle: "Войдите в свой аккаунт Universo Platformo"
+    sign_up_subtitle: "Присоединяйтесь к Universo Platformo сегодня"
+    email: "Электронная почта"
+    email_placeholder: "you@example.com"
+    password: "Пароль"
+    password_placeholder: "Ваш пароль"
+    password_confirmation: "Подтверждение пароля"
+    password_confirmation_placeholder: "Повторите пароль"
+    no_account: "Нет аккаунта?"
+    have_account: "Уже есть аккаунт?"
+    messages:
+      signed_in: "Вы успешно вошли в систему."
+      signed_out: "Вы успешно вышли из системы."
+      signed_up: "Аккаунт успешно создан."
+      check_email: "Пожалуйста, проверьте email для подтверждения аккаунта."
+    errors:
+      email_password_required: "Необходимо указать email и пароль."
+      passwords_do_not_match: "Пароли не совпадают."
+      sign_in_failed: "Ошибка входа. Попробуйте ещё раз."
+      sign_up_failed: "Ошибка регистрации. Попробуйте ещё раз."
+      invalid_credentials: "Неверный email или пароль."
+      email_not_confirmed: "Сначала подтвердите адрес электронной почты."
+      email_already_taken: "Этот адрес электронной почты уже зарегистрирован."
+      password_too_short: "Пароль должен содержать не менее 6 символов."
+      invalid_email: "Пожалуйста, введите корректный адрес электронной почты."
+      service_unavailable: "Сервис аутентификации временно недоступен. Попробуйте позже."
+
+  # Целевая страница
+  landing:
+    page_title: "Добро пожаловать в Universo Platformo"
+    hero:
+      title_prefix: "Исследуйте"
+      title_highlight: "все миры"
+      description: "Единая платформа для управления метавселенными, кластерами и цифровыми ресурсами. Подключайтесь, создавайте и сотрудничайте в безграничных виртуальных пространствах."
+      button: "Начать"
+    testimonials:
+      kompendio:
+        title: "Kompendio"
+        description: "Комплексная система управления знаниями для организации и обмена информацией в вашей организации."
+      platformo:
+        title: "Platformo"
+        description: "Абстрактный управляющий слой, объединяющий все ваши цифровые ресурсы и среды метавселенных."
+      kiberplano:
+        title: "Kiberplano"
+        description: "Продвинутая система планирования и исполнения для координации сложных многомерных проектов."
+      grandaringo:
+        title: "Grandaringo"
+        description: "Инструменты для создания иммерсивного контента и визуальных материалов."
+    footer:
+      tagline: "Реализация на Ruby on Rails"
+      contact: "Связаться с нами"
+      contact_email: "contact@universo-platformo.com"
+    authenticated:
+      page_title: "Добро пожаловать — Universo Platformo"
+    onboarding:
+      welcome:
+        title: "Добро пожаловать в Universo Platformo!"
+        description: "Мы рады вас видеть. Давайте настроим вашу учётную запись и поможем начать работу с платформой."
+        button: "Начать"
+      interests:
+        title: "Выберите интересы"
+        description: "Выберите области, которые вас больше всего интересуют, для персонализации опыта."
+        knowledge: "Управление знаниями"
+        planning: "Планирование и исполнение"
+        creative: "Творчество и медиа"
+        analytics: "Аналитика и данные"
+        button: "Продолжить"
+      completion:
+        title: "Всё готово!"
+        description: "Ваш профиль настроен. Вы готовы начать изучение Universo Platformo и всех его возможностей."
+        start_over: "Начать заново"
+        go_to_app: "Перейти к панели управления"
