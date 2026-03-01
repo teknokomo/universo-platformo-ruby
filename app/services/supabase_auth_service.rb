@@ -97,7 +97,7 @@ class SupabaseAuthService
         { success: true }
       else
         Rails.logger.warn("[SupabaseAuthService] sign_out failed (status #{response[:status]})")
-        { success: false, error: 'Sign out failed' }
+        { success: false, error: I18n.t('auth.errors.sign_out_failed') }
       end
     rescue => e
       Rails.logger.error("[SupabaseAuthService] sign_out error: #{e.message}")
@@ -117,7 +117,7 @@ class SupabaseAuthService
         user = response[:body]
         { success: true, user: { id: user['id'], email: user['email'] } }
       else
-        { success: false, error: 'Invalid or expired token' }
+        { success: false, error: I18n.t('auth.errors.invalid_token') }
       end
     rescue => e
       Rails.logger.error("[SupabaseAuthService] get_user error: #{e.message}")
@@ -131,7 +131,7 @@ class SupabaseAuthService
     end
 
     def unconfigured_error
-      { success: false, error: 'Supabase not configured' }
+      { success: false, error: I18n.t('auth.errors.not_configured') }
     end
 
     def base_headers(access_token: nil)

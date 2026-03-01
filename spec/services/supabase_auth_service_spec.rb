@@ -18,7 +18,7 @@ RSpec.describe SupabaseAuthService do
       it 'returns an error result' do
         result = described_class.sign_in(email: 'test@example.com', password: 'password')
         expect(result[:success]).to eq(false)
-        expect(result[:error]).to include('not configured')
+        expect(result[:error]).to eq(I18n.t('auth.errors.not_configured'))
       end
     end
 

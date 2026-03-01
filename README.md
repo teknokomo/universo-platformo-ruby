@@ -135,12 +135,12 @@ bundle exec bundle-audit check --update    # Dependency audit
 
 ## Security Notes
 
-- **CSRF protection**: `protect_from_forgery with: :exception` for HTML forms;  
-  `:null_session` for JSON API requests. JSON clients must send `X-CSRF-Token`.
+- **CSRF protection**: `protect_from_forgery with: :exception` for all requests.  
+  JSON clients must obtain a token via `GET /api/v1/auth/csrf` and send `X-CSRF-Token`.
 - **Session fixation**: `reset_session` is called before storing new credentials  
   on every successful sign-in or sign-up.
-- **No secrets in browser**: Supabase credentials exist only in server environment  
-  variables and are never rendered into HTML or JavaScript.
+- **No secrets in browser**: Supabase credentials and tokens exist only in server  
+  environment variables and session storage — never rendered into HTML or JavaScript.
 - **SSL verification**: `OpenSSL::SSL::VERIFY_PEER` is enforced for Supabase calls.
 
 ## Internationalization

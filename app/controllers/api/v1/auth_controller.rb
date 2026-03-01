@@ -7,9 +7,10 @@
 #   POST   /api/v1/auth/sign-up  -> register (sign up, sets session)
 #   DELETE /api/v1/auth/sign-out -> destroy  (sign out, clears session)
 #
-# Security: ApplicationController applies protect_from_forgery with :null_session
-# for JSON requests. State-changing endpoints (POST/DELETE) require the
-# X-CSRF-Token header; obtain a token first via GET /api/v1/auth/csrf.
+# Security: ApplicationController applies protect_from_forgery with :exception
+# for all requests. JSON clients must obtain a CSRF token via GET /api/v1/auth/csrf
+# and include it as the X-CSRF-Token header in state-changing requests (POST/DELETE).
+# Supabase credentials and tokens are never exposed to the browser.
 class Api::V1::AuthController < ApplicationController
   # GET /api/v1/auth/csrf
   def csrf
@@ -46,8 +47,7 @@ class Api::V1::AuthController < ApplicationController
       session[:user_email]   = result[:user][:email]
       session[:access_token] = result[:access_token]
       render json: {
-        user: { id: result[:user][:id], email: result[:user][:email] },
-        access_token: result[:access_token]
+        user: { id: result[:user][:id], email: result[:user][:email] }
       }
     else
       render json: { error: result[:error] || I18n.t('auth.errors.sign_in_failed') },
@@ -76,8 +76,7 @@ class Api::V1::AuthController < ApplicationController
         session[:user_email]   = result[:user][:email]
         session[:access_token] = result[:access_token]
         render json: {
-          user: { id: result[:user][:id], email: result[:user][:email] },
-          access_token: result[:access_token]
+          user: { id: result[:user][:id], email: result[:user][:email] }
         }, status: :created
       end
     else

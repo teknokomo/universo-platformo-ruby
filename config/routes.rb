@@ -24,7 +24,7 @@ Rails.application.routes.draw do
   end
 
   # JSON API routes for authentication (used by frontend JS)
-  namespace :api do
+  namespace :api, defaults: { format: :json } do
     namespace :v1 do
       scope :auth do
         get    "csrf",     to: "auth#csrf",    as: :auth_csrf

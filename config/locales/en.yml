@@ -84,6 +84,9 @@ en:
       password_too_short: "Password must be at least 6 characters."
       invalid_email: "Please enter a valid email address."
       service_unavailable: "Authentication service is currently unavailable. Please try again later."
+      not_configured: "Authentication service is not configured."
+      sign_out_failed: "Sign out failed. Please try again."
+      invalid_token: "Invalid or expired authentication token."
 
   # Landing page
   landing:

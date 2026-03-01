@@ -75,7 +75,7 @@
                 { key: 'analytics', icon: '📊' }
               ].each do |interest| %>
                 <label class="flex items-center gap-3 p-4 rounded-xl border-2 border-gray-200 cursor-pointer hover:border-blue-300 transition-colors has-[:checked]:border-blue-600 has-[:checked]:bg-blue-50">
-                  <input type="checkbox" name="interests[]" value="<%= interest[:key] %>" class="hidden">
+                  <input type="checkbox" name="interests[]" value="<%= interest[:key] %>" class="sr-only peer">
                   <span class="text-2xl"><%= interest[:icon] %></span>
                   <span class="font-medium text-gray-800"><%= t("landing.onboarding.interests.#{interest[:key]}") %></span>
                 </label>

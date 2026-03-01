@@ -11,13 +11,19 @@ require 'capybara/rspec'
 require 'shoulda/matchers'
 require 'webmock/rspec'
 
-# Detect database availability BEFORE configuring RSpec
+# Detect database availability BEFORE configuring RSpec.
+# Set ALLOW_DBLESS_TESTS=true to allow running without a database.
+# Without the flag, missing DB will raise immediately.
 DB_AVAILABLE = begin
   ActiveRecord::Base.connection.execute('SELECT 1')
   true
-rescue ActiveRecord::ConnectionNotEstablished, PG::ConnectionBad
-  warn '[RSpec] No database connection available. DB-dependent tests will be skipped.'
-  false
+rescue ActiveRecord::ConnectionNotEstablished, PG::ConnectionBad => e
+  if ENV['ALLOW_DBLESS_TESTS'] == 'true'
+    warn '[RSpec] No database connection available. DB-dependent tests will be skipped.'
+    false
+  else
+    raise e
+  end
 end
 
 # When no DB is available, patch ActiveRecord::TestFixtures to prevent

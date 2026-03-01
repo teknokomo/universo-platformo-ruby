@@ -1,7 +1,8 @@
 class ApplicationController < ActionController::Base
-  # Security: verify authenticity token for non-JSON requests
-  protect_from_forgery with: :exception, unless: :json_request?
-  protect_from_forgery with: :null_session, if: :json_request?
+  # Security: verify authenticity token for all requests (HTML and JSON).
+  # JSON clients must obtain a CSRF token via GET /api/v1/auth/csrf
+  # and include it as the X-CSRF-Token header in state-changing requests.
+  protect_from_forgery with: :exception
 
   before_action :set_locale
 
@@ -33,9 +34,5 @@ class ApplicationController < ActionController::Base
         format.json { render json: { error: 'Unauthorized' }, status: :unauthorized }
       end
     end
-  end
-
-  def json_request?
-    request.format.json?
   end
 end

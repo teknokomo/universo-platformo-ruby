@@ -74,4 +74,8 @@ Rails.application.configure do
 
   # Do not dump schema after migrations.
   config.active_record.dump_schema_after_migration = false
+
+  # Use local storage for ActiveStorage in production.
+  # Switch to :amazon (S3) or another cloud service for real deployments.
+  config.active_storage.service = :local
 end
