@@ -8,8 +8,8 @@ gem 'rails', '~> 7.1.2'
 # Database - PostgreSQL for Supabase compatibility
 gem 'pg', '~> 1.5'
 
-# Supabase integration
-gem 'supabase', '~> 0.3'
+# Supabase integration (via direct HTTP using Net::HTTP - no additional gem needed)
+# The SupabaseAuthService handles all Supabase communication via HTTP
 
 # Authentication
 gem 'devise', '~> 4.9'
@@ -76,6 +76,7 @@ group :test do
   gem 'selenium-webdriver', '~> 4.16'
   gem 'shoulda-matchers', '~> 6.0'
   gem 'database_cleaner-active_record', '~> 2.1'
+  gem 'webmock', '~> 3.23'
   
   # Code coverage
   gem 'simplecov', '~> 0.22', require: false

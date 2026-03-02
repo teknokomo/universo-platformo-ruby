@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="<%= I18n.locale %>">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="csrf-param" content="<%= request_forgery_protection_token %>">
+    <meta name="csrf-token" content="<%= form_authenticity_token %>">
+    <title><%= page_title(content_for(:title)) %></title>
+    <%= stylesheet_link_tag "tailwind", "data-turbo-track": "reload" %>
+    <%= javascript_importmap_tags %>
+  </head>
+
+  <body class="min-h-screen bg-gray-50 text-gray-900 antialiased">
+    <%# Flash messages — single fixed container with stacked messages %>
+    <% if flash.any? %>
+      <div class="fixed top-4 right-4 z-50 max-w-sm w-full space-y-2">
+        <% flash.each do |type, message| %>
+          <div class="flex items-start gap-3 p-4 rounded-lg border shadow-md <%= flash_class(type) %>" data-flash-message>
+            <p class="text-sm font-medium"><%= message %></p>
+            <button
+              onclick="this.closest('[data-flash-message]').remove()"
+              class="ml-auto flex-shrink-0 text-current opacity-60 hover:opacity-100"
+              aria-label="Close"
+            >
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+              </svg>
+            </button>
+          </div>
+        <% end %>
+      </div>
+    <% end %>
+
+    <%= yield %>
+  </body>
+</html>

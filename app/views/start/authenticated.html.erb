@@ -1,0 +1,168 @@
+<%# AuthenticatedStartPage - Onboarding page for authenticated users
+   Displays:
+   - Navigation bar with user email and sign-out link
+   - Onboarding wizard (multi-step) for new users
+   - Completion screen for users who completed onboarding
+   - Footer with contact information
+%>
+<% content_for(:title) { t('landing.authenticated.page_title') } %>
+
+<div class="flex flex-col min-h-screen bg-gray-50">
+
+  <%# Navigation bar %>
+  <nav class="bg-white border-b border-gray-200 px-6 py-4">
+    <div class="max-w-6xl mx-auto flex items-center justify-between">
+      <div class="flex items-center gap-2">
+        <svg class="w-7 h-7 text-blue-600" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+          <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z"/>
+          <circle cx="12" cy="12" r="4" />
+        </svg>
+        <span class="font-bold text-lg text-gray-900"><%= t('app.name') %></span>
+      </div>
+      <div class="flex items-center gap-4">
+        <span class="text-sm text-gray-600 hidden sm:block"><%= current_user[:email] %></span>
+        <%= button_to t('auth.sign_out'), auth_sign_out_path, method: :delete,
+            class: "text-sm font-medium text-gray-700 hover:text-red-600 transition-colors bg-transparent border-0 cursor-pointer" %>
+      </div>
+    </div>
+  </nav>
+
+  <%# Main content - Onboarding wizard %>
+  <div class="flex-1 py-12 px-4" id="onboarding-content">
+    <div class="max-w-2xl mx-auto">
+      <div id="onboarding-wizard" data-completed="false">
+
+        <%# Step indicator %>
+        <div class="flex items-center justify-center gap-2 mb-8" id="step-indicator">
+          <% 3.times do |i| %>
+            <div class="w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold step-dot
+                        <%= i == 0 ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-500' %>"
+                 data-step="<%= i + 1 %>">
+              <%= i + 1 %>
+            </div>
+            <% if i < 2 %>
+              <div class="w-16 h-0.5 step-connector bg-gray-200"></div>
+            <% end %>
+          <% end %>
+        </div>
+
+        <%# Step 1: Welcome %>
+        <div id="step-1" class="wizard-step">
+          <div class="bg-white rounded-2xl shadow-sm border border-gray-200 p-8 text-center">
+            <div class="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <svg class="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
+              </svg>
+            </div>
+            <h2 class="text-2xl font-bold text-gray-900 mb-3"><%= t('landing.onboarding.welcome.title') %></h2>
+            <p class="text-gray-600 mb-6 leading-relaxed"><%= t('landing.onboarding.welcome.description') %></p>
+            <button onclick="nextStep(1)" class="px-8 py-3 bg-blue-600 text-white font-semibold rounded-xl hover:bg-blue-700 transition-colors">
+              <%= t('landing.onboarding.welcome.button') %>
+            </button>
+          </div>
+        </div>
+
+        <%# Step 2: Interests selection %>
+        <div id="step-2" class="wizard-step hidden">
+          <div class="bg-white rounded-2xl shadow-sm border border-gray-200 p-8">
+            <h2 class="text-2xl font-bold text-gray-900 mb-2"><%= t('landing.onboarding.interests.title') %></h2>
+            <p class="text-gray-600 mb-6"><%= t('landing.onboarding.interests.description') %></p>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-6">
+              <% [
+                { key: 'knowledge', icon: '📚' },
+                { key: 'planning', icon: '📋' },
+                { key: 'creative', icon: '🎨' },
+                { key: 'analytics', icon: '📊' }
+              ].each do |interest| %>
+                <label class="flex items-center gap-3 p-4 rounded-xl border-2 border-gray-200 cursor-pointer hover:border-blue-300 transition-colors has-[:checked]:border-blue-600 has-[:checked]:bg-blue-50">
+                  <input type="checkbox" name="interests[]" value="<%= interest[:key] %>" class="sr-only peer">
+                  <span class="text-2xl"><%= interest[:icon] %></span>
+                  <span class="font-medium text-gray-800"><%= t("landing.onboarding.interests.#{interest[:key]}") %></span>
+                </label>
+              <% end %>
+            </div>
+            <div class="flex gap-3">
+              <button onclick="prevStep(2)" class="px-6 py-3 text-gray-700 font-semibold rounded-xl border border-gray-200 hover:bg-gray-50 transition-colors">
+                <%= t('actions.back') %>
+              </button>
+              <button onclick="nextStep(2)" class="flex-1 px-6 py-3 bg-blue-600 text-white font-semibold rounded-xl hover:bg-blue-700 transition-colors">
+                <%= t('landing.onboarding.interests.button') %>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <%# Step 3: Completion %>
+        <div id="step-3" class="wizard-step hidden">
+          <div class="bg-white rounded-2xl shadow-sm border border-gray-200 p-8 text-center">
+            <div class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <svg class="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+              </svg>
+            </div>
+            <h2 class="text-2xl font-bold text-gray-900 mb-3"><%= t('landing.onboarding.completion.title') %></h2>
+            <p class="text-gray-600 mb-6 leading-relaxed"><%= t('landing.onboarding.completion.description') %></p>
+            <div class="flex flex-col sm:flex-row gap-3 justify-center">
+              <button onclick="resetWizard()" class="px-6 py-3 text-gray-700 font-semibold rounded-xl border border-gray-200 hover:bg-gray-50 transition-colors">
+                <%= t('landing.onboarding.completion.start_over') %>
+              </button>
+              <a href="#" class="px-8 py-3 bg-blue-600 text-white font-semibold rounded-xl hover:bg-blue-700 transition-colors">
+                <%= t('landing.onboarding.completion.go_to_app') %>
+              </a>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <%# Footer %>
+  <footer class="flex-shrink-0 py-4 px-6 border-t border-gray-200">
+    <div class="max-w-6xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-gray-500">
+      <span>&copy; <%= Date.current.year %> <%= t('app.name') %></span>
+      <a href="mailto:<%= t('landing.footer.contact_email') %>" class="hover:text-blue-600 transition-colors">
+        <%= t('landing.footer.contact') %>
+      </a>
+    </div>
+  </footer>
+
+</div>
+
+<script>
+  let currentStep = 1;
+  const totalSteps = 3;
+
+  function showStep(step) {
+    document.querySelectorAll('.wizard-step').forEach(el => el.classList.add('hidden'));
+    document.getElementById('step-' + step).classList.remove('hidden');
+
+    // Update step indicator dots
+    document.querySelectorAll('.step-dot').forEach((dot, i) => {
+      if (i + 1 < step) {
+        dot.className = dot.className.replace('bg-gray-200 text-gray-500', 'bg-green-500 text-white');
+        dot.className = dot.className.replace('bg-blue-600 text-white', 'bg-green-500 text-white');
+      } else if (i + 1 === step) {
+        dot.className = dot.className.replace('bg-gray-200 text-gray-500', 'bg-blue-600 text-white');
+        dot.className = dot.className.replace('bg-green-500 text-white', 'bg-blue-600 text-white');
+      } else {
+        dot.className = dot.className.replace('bg-blue-600 text-white', 'bg-gray-200 text-gray-500');
+        dot.className = dot.className.replace('bg-green-500 text-white', 'bg-gray-200 text-gray-500');
+      }
+    });
+
+    currentStep = step;
+  }
+
+  function nextStep(step) {
+    if (step < totalSteps) showStep(step + 1);
+  }
+
+  function prevStep(step) {
+    if (step > 1) showStep(step - 1);
+  }
+
+  function resetWizard() {
+    showStep(1);
+  }
+</script>

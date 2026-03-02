@@ -50,3 +50,86 @@ en:
       not_found: "%{model} not found."
       unauthorized: "You are not authorized to perform this action."
       validation: "Please fix the errors below."
+
+  # Authentication
+  auth:
+    sign_in: "Sign In"
+    sign_up: "Sign Up"
+    sign_out: "Sign Out"
+    welcome_back: "Welcome back"
+    create_account: "Create your account"
+    sign_in_subtitle: "Sign in to your Universo Platformo account"
+    sign_up_subtitle: "Join Universo Platformo today"
+    email: "Email"
+    email_placeholder: "you@example.com"
+    password: "Password"
+    password_placeholder: "Your password"
+    password_confirmation: "Confirm Password"
+    password_confirmation_placeholder: "Repeat your password"
+    no_account: "Don't have an account?"
+    have_account: "Already have an account?"
+    messages:
+      signed_in: "You have signed in successfully."
+      signed_out: "You have signed out successfully."
+      signed_up: "Account created successfully."
+      check_email: "Please check your email to confirm your account."
+    errors:
+      email_password_required: "Email and password are required."
+      passwords_do_not_match: "Passwords do not match."
+      sign_in_failed: "Sign in failed. Please try again."
+      sign_up_failed: "Sign up failed. Please try again."
+      invalid_credentials: "Invalid email or password."
+      email_not_confirmed: "Please confirm your email address first."
+      email_already_taken: "This email address is already registered."
+      password_too_short: "Password must be at least 6 characters."
+      invalid_email: "Please enter a valid email address."
+      service_unavailable: "Authentication service is currently unavailable. Please try again later."
+      not_configured: "Authentication service is not configured."
+      sign_out_failed: "Sign out failed. Please try again."
+      invalid_token: "Invalid or expired authentication token."
+
+  # Landing page
+  landing:
+    page_title: "Welcome to Universo Platformo"
+    hero:
+      title_prefix: "Explore"
+      title_highlight: "all worlds"
+      description: "A unified platform for managing metaverses, clusters, and digital resources. Connect, create, and collaborate across infinite virtual spaces."
+      button: "Get Started"
+    testimonials:
+      kompendio:
+        title: "Kompendio"
+        description: "Comprehensive knowledge management system for organizing and sharing information across your organization."
+      platformo:
+        title: "Platformo"
+        description: "Abstract management layer connecting all your digital resources and metaverse environments."
+      kiberplano:
+        title: "Kiberplano"
+        description: "Advanced planning and execution system for coordinating complex multi-dimensional projects."
+      grandaringo:
+        title: "Grandaringo"
+        description: "Creative and media tools for designing immersive experiences and visual content."
+    footer:
+      tagline: "Ruby on Rails Implementation"
+      contact: "Contact Us"
+      contact_email: "contact@universo-platformo.com"
+    authenticated:
+      page_title: "Welcome — Universo Platformo"
+    onboarding:
+      welcome:
+        title: "Welcome to Universo Platformo!"
+        description: "We're glad you're here. Let's take a few moments to personalize your experience and help you get started with the platform."
+        button: "Get Started"
+      interests:
+        title: "Select Your Interests"
+        description: "Choose the areas you're most interested in to personalize your experience."
+        knowledge: "Knowledge Management"
+        planning: "Planning & Execution"
+        creative: "Creative & Media"
+        analytics: "Analytics & Data"
+        button: "Continue"
+      completion:
+        title: "You're All Set!"
+        description: "Your profile has been set up. You're ready to start exploring Universo Platformo and all its capabilities."
+        start_over: "Start Over"
+        go_to_app: "Go to Dashboard"

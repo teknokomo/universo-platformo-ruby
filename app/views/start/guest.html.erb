@@ -1,0 +1,85 @@
+<%# GuestStartPage - Landing page for non-authenticated users
+   Displays:
+   - Navigation bar with sign-in/sign-up links
+   - Hero section with title and "Get Started" button (centered)
+   - Product cards section (4 Universo products)
+   - Footer with contact information
+%>
+<% content_for(:title) { t('landing.page_title') } %>
+
+<div class="flex flex-col min-h-screen relative bg-gray-50">
+
+  <%# Gradient overlay for better text readability %>
+  <div class="absolute inset-0 bg-gradient-radial pointer-events-none" style="background: radial-gradient(ellipse 80% 50% at 50% -20%, hsla(210, 100%, 90%, 0.8), transparent);"></div>
+
+  <%# Navigation bar %>
+  <nav class="relative z-10 flex items-center justify-between px-6 py-4">
+    <div class="flex items-center gap-2">
+      <svg class="w-7 h-7 text-blue-600" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z"/>
+        <circle cx="12" cy="12" r="4" />
+      </svg>
+      <span class="font-bold text-lg text-gray-900"><%= t('app.name') %></span>
+    </div>
+    <div class="flex items-center gap-3">
+      <%= link_to t('auth.sign_in'), auth_sign_in_path,
+          class: "text-sm font-medium text-gray-700 hover:text-blue-600 transition-colors" %>
+      <%= link_to t('auth.sign_up'), auth_sign_up_path,
+          class: "text-sm font-medium px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors" %>
+    </div>
+  </nav>
+
+  <%# Hero section - vertically centered %>
+  <div class="flex-1 flex flex-col items-center justify-center relative z-10 px-4 py-12">
+    <div class="max-w-2xl text-center">
+      <h1 class="text-5xl sm:text-6xl font-bold text-gray-900 mb-6 leading-tight">
+        <%= t('landing.hero.title_prefix') %>
+        <span class="text-blue-600">&nbsp;<%= t('landing.hero.title_highlight') %></span>
+      </h1>
+      <p class="text-lg sm:text-xl text-gray-700 mb-10 max-w-xl mx-auto leading-relaxed"
+         style="text-shadow: 0 1px 2px rgba(0,0,0,0.1);">
+        <%= t('landing.hero.description') %>
+      </p>
+      <div class="flex justify-center">
+        <%= link_to t('landing.hero.button'), auth_sign_in_path,
+            class: "px-8 py-4 bg-blue-600 text-white text-lg font-semibold rounded-xl hover:bg-blue-700 transition-colors shadow-lg hover:shadow-xl" %>
+      </div>
+    </div>
+  </div>
+
+  <%# Product cards section - fixed to bottom %>
+  <div class="relative z-10 flex-shrink-0 px-4 pb-2 pt-4">
+    <div class="max-w-6xl mx-auto grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <% [
+        { title: t('landing.testimonials.kompendio.title'), description: t('landing.testimonials.kompendio.description') },
+        { title: t('landing.testimonials.platformo.title'), description: t('landing.testimonials.platformo.description') },
+        { title: t('landing.testimonials.kiberplano.title'), description: t('landing.testimonials.kiberplano.description') },
+        { title: t('landing.testimonials.grandaringo.title'), description: t('landing.testimonials.grandaringo.description') }
+      ].each do |product| %>
+        <div class="bg-white bg-opacity-80 backdrop-blur-sm border border-gray-200 rounded-xl p-4 shadow-sm">
+          <h3 class="font-bold text-gray-900 mb-2 text-sm">
+            <span class="text-blue-600">Universo</span> <%= product[:title] %>
+          </h3>
+          <p class="text-xs text-gray-600 leading-relaxed"><%= product[:description] %></p>
+        </div>
+      <% end %>
+    </div>
+  </div>
+
+  <%# Footer %>
+  <footer class="relative z-10 flex-shrink-0 py-4 px-6 border-t border-gray-200 border-opacity-50">
+    <div class="max-w-6xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-gray-600">
+      <div class="flex items-center gap-4">
+        <span>&copy; <%= Date.current.year %> <%= t('app.name') %></span>
+        <span class="hidden sm:inline text-gray-400">&bull;</span>
+        <span class="hidden sm:inline"><%= t('landing.footer.tagline') %></span>
+      </div>
+      <div class="flex items-center gap-4">
+        <a href="mailto:<%= t('landing.footer.contact_email') %>" class="hover:text-blue-600 transition-colors">
+          <%= t('landing.footer.contact') %>
+        </a>
+      </div>
+    </div>
+  </footer>
+
+</div>

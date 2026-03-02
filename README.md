@@ -1,74 +1,76 @@
 # Universo Platformo Ruby
 
-Implementation of Universo Platformo / Universo MMOOMM / Universo Kiberplano built on Ruby on Rails and related Ruby stack.
-
-## Overview
-
-Universo Platformo Ruby is a Ruby on Rails implementation of the Universo Platformo ecosystem, a modular platform for building distributed applications with clusters, metaverses, and multiplayer capabilities. This implementation follows Ruby on Rails best practices while maintaining conceptual alignment with the [Universo Platformo React](https://github.com/teknokomo/universo-platformo-react) reference implementation.
+Ruby on Rails implementation of Universo Platformo — a modular platform for metaverses, clusters, and digital resources.
 
 ## Project Status
 
-🚧 **In Development** - Initial setup phase
+🚀 **Active Development** — Start pages and Supabase authentication are implemented.
 
-This project is currently in the initial setup phase. The repository structure, documentation, and core infrastructure are being established according to the project constitution and specifications.
+This release delivers the guest landing page, the authenticated onboarding page, and a complete  
+Supabase authentication flow that runs entirely through the Rails backend.
+
+## How Supabase Integration Works
+
+**The frontend never talks to Supabase directly.** All authentication calls go through the Rails backend:
+
+```
+Browser → Rails (SessionsController / Api::V1::AuthController) → Supabase Auth API
+```
+
+`SupabaseAuthService` handles all communication with the Supabase REST API using Ruby's  
+built-in `Net::HTTP`. Credentials (`SUPABASE_URL`, `SUPABASE_KEY`) live only on the server.
 
 ## Architecture
 
-### Modular Package Architecture
+### Package Structure
 
-**ALL functionality** is organized as independent packages in the `packages/` directory. This modular approach enables:
-- Parallel development of features
-- Clear separation of concerns
-- Independent testing and deployment
-- **Future extraction**: Packages are designed as workspace packages in the monorepo initially, with the goal of extracting them into separate repositories as the project matures
-
-### Monorepo Structure
-
-The project uses a monorepo structure with packages organized in the `packages/` directory:
+The `packages/` directory contains documentation for each feature module.
+Implementation code lives in the root `app/` following standard Rails conventions:
 
 ```
 packages/
-├── clusters-frt/     # Clusters frontend package
-│   └── base/         # Base implementation
-├── clusters-srv/     # Clusters backend package
-│   └── base/         # Base implementation
-└── ...               # Additional feature packages
+├── start-frt/base/   # Guest and authenticated start pages (docs)
+└── auth-frt/base/    # Authentication UI — sign-in / sign-up (docs)
 ```
 
-**What goes in packages/:**
-- All feature-specific code (models, controllers, views, components)
-- Business logic for specific domains (clusters, metaverses, spaces, etc.)
-- Feature-specific database migrations and tests
-- Shared utility packages (universo-types, universo-utils, etc.)
+### Application Layer (root `app/`)
 
-**What stays in root application:**
-- Application launcher and configuration files
-- Main routes file that mounts package engines
-- Shared application layouts
-- Database and environment configuration
+| Path | Purpose |
+|------|---------|
+| `app/controllers/start_controller.rb` | Routes `/` to guest or authenticated page |
+| `app/controllers/auth/sessions_controller.rb` | HTML form sign-in, sign-up, sign-out |
+| `app/controllers/api/v1/auth_controller.rb` | JSON API for authentication |
+| `app/services/supabase_auth_service.rb` | Supabase HTTP client (backend only) |
+| `app/views/start/guest.html.erb` | Landing page for unauthenticated visitors |
+| `app/views/start/authenticated.html.erb` | Onboarding wizard for signed-in users |
+| `app/views/auth/sessions/new.html.erb` | Sign-in form |
+| `app/views/auth/sessions/sign_up.html.erb` | Sign-up form |
 
-### Package Naming Convention
+## Pages
 
-- **Frontend packages**: `<feature>-frt` (e.g., `clusters-frt`)
-- **Backend packages**: `<feature>-srv` (e.g., `clusters-srv`)
-- Each package contains a `base/` directory for core implementations, allowing future alternative implementations
+| URL | Auth required | Description |
+|-----|--------------|-------------|
+| `GET /` | No | Redirects to `/start/guest` or `/start/authenticated` |
+| `GET /start/guest` | No | Hero section + 4 product cards + footer |
+| `GET /start/authenticated` | Yes | Multi-step onboarding wizard |
+| `GET /auth/sign-in` | No | Sign-in form |
+| `GET /auth/sign-up` | No | Sign-up / registration form |
+| `POST /auth/sign-in` | No | Process sign-in |
+| `POST /auth/sign-up` | No | Process registration |
+| `DELETE /auth/sign-out` | Yes | Sign-out |
+| `GET /api/v1/auth/csrf` | No | CSRF token for JSON clients |
+| `GET /api/v1/auth/me` | No | Current user info (JSON) |
 
-### Technology Stack
+## Technology Stack
 
-- **Language**: Ruby 3.2+
-- **Framework**: Ruby on Rails 7.0+
-- **Database**: PostgreSQL via Supabase
-- **Authentication**: Supabase Auth
-- **Testing**: RSpec, FactoryBot, Capybara
-- **Code Quality**: RuboCop, Brakeman, Bundler-audit
-- **Frontend**: ViewComponent with Material Design styling
-
-## Prerequisites
-
-- Ruby 3.2 or higher
-- PostgreSQL (via Supabase)
-- Bundler
-- Node.js (for asset compilation)
+- **Runtime**: Ruby 3.2+
+- **Framework**: Ruby on Rails 7.1
+- **Database**: PostgreSQL (Supabase)
+- **Authentication**: Supabase Auth (via `Net::HTTP`, no SDK)
+- **Frontend**: Tailwind CSS, Turbo, Stimulus, Importmap
+- **Testing**: RSpec, WebMock, Shoulda Matchers
+- **Code quality**: RuboCop, Brakeman, Bundler Audit
+- **i18n**: English and Russian locales (`config/locales/en.yml`, `ru.yml`)
 
 ## Quick Start
 
@@ -87,112 +89,71 @@ bundle install
 
 ### 3. Configure Environment
 
-Copy the example environment file and configure your settings:
-
 ```bash
 cp .env.example .env
 ```
 
-Edit `.env` with your Supabase credentials:
+Edit `.env` and fill in your Supabase project values:
 
-```
-SUPABASE_URL=your_supabase_url
-SUPABASE_KEY=your_supabase_key
-DATABASE_URL=your_database_url
+```dotenv
+SUPABASE_URL=https://<your-project-ref>.supabase.co
+SUPABASE_KEY=<your-supabase-anon-key>
+DATABASE_URL=postgresql://postgres:<password>@db.<project-ref>.supabase.co:5432/postgres
+SECRET_KEY_BASE=<run: bundle exec rails secret>
 ```
 
-### 4. Setup Database
+### 4. Build CSS and Start the Server
 
 ```bash
-rails db:create
-rails db:migrate
-rails db:seed
+bundle exec rails tailwindcss:build
+bundle exec rails server
 ```
 
-### 5. Start the Application
-
-```bash
-rails server
-```
-
-Visit `http://localhost:3000` in your browser.
+Open `http://localhost:3000` in your browser.
 
 ## Development
 
 ### Running Tests
 
 ```bash
-# Run all tests
+# All tests
 bundle exec rspec
 
-# Run specific test file
-bundle exec rspec spec/models/cluster_spec.rb
+# Specific file
+bundle exec rspec spec/requests/auth_spec.rb
 
-# Run with coverage
+# With coverage
 COVERAGE=true bundle exec rspec
 ```
 
 ### Code Quality
 
 ```bash
-# Run RuboCop linter
-bundle exec rubocop
-
-# Run security checks
-bundle exec brakeman
-
-# Check for vulnerable dependencies
-bundle exec bundle-audit check --update
+bundle exec rubocop                        # Linter
+bundle exec brakeman                       # Security scanner
+bundle exec bundle-audit check --update    # Dependency audit
 ```
 
-## Project Structure
+## Security Notes
 
-```
-.
-├── .github/              # GitHub configurations and workflows
-│   └── instructions/     # Guidelines for issues, PRs, labels
-├── .specify/             # Specify AI tooling
-│   ├── memory/          # Project constitution
-│   └── templates/       # Document templates
-├── packages/            # Feature packages (monorepo structure)
-├── specs/               # Feature specifications
-├── config/              # Rails configuration
-├── app/                 # Rails application code
-├── db/                  # Database migrations and seeds
-└── spec/                # Test suite
-```
-
-## Core Features
-
-### Clusters
-
-The foundational feature implementing a three-tier hierarchy:
-
-- **Clusters**: Top-level organizational units
-- **Domains**: Mid-level units within clusters
-- **Resources**: Individual resources within domains
-
-This structure serves as a template for other features like Metaverses (Metaverses/Sections/Entities) and provides a consistent pattern throughout the platform.
-
-## Documentation
-
-- **[Constitution](/.specify/memory/constitution.md)**: Core principles and architectural decisions
-- **[Specifications](/specs/)**: Detailed feature specifications
-- **[GitHub Guidelines](/.github/instructions/)**: Workflows for issues, PRs, and labels
-- **[Development Guide](DEVELOPMENT.md)**: Detailed development instructions (coming soon)
+- **CSRF protection**: `protect_from_forgery with: :exception` for all requests.  
+  JSON clients must obtain a token via `GET /api/v1/auth/csrf` and send `X-CSRF-Token`.
+- **Session fixation**: `reset_session` is called before storing new credentials  
+  on every successful sign-in or sign-up.
+- **No secrets in browser**: Supabase credentials and tokens exist only in server  
+  environment variables and session storage — never rendered into HTML or JavaScript.
+- **SSL verification**: `OpenSSL::SSL::VERIFY_PEER` is enforced for Supabase calls.
 
 ## Internationalization
 
-This project supports multiple languages with English as the primary standard:
+UI text uses Rails I18n. Locale files are in `config/locales/`:
 
-- All code comments and inline documentation are in English
-- README files exist in both English (README.md) and Russian (README-RU.md)
-- UI text uses Rails I18n framework with `en` and `ru` locales
-- GitHub Issues include Russian translations in spoiler sections
+- `en.yml` — English (default)
+- `ru.yml` — Russian
 
 ## Contributing
 
-1. Read the [GitHub Instructions](/.github/instructions/)
+1. Read the guidelines in `.github/instructions/`
 2. Create an Issue using the provided templates
 3. Create a feature branch from your Issue
 4. Submit a Pull Request following the PR guidelines
@@ -200,14 +161,15 @@ This project supports multiple languages with English as the primary standard:
 
 ## Reference Implementation
 
-This project is inspired by and maintains conceptual alignment with [Universo Platformo React](https://github.com/teknokomo/universo-platformo-react), adapting its architecture to Ruby on Rails best practices.
+This project is inspired by [Universo Platformo React](https://github.com/teknokomo/universo-platformo-react)  
+and replicates its architecture using pure Ruby on Rails best practices.
 
 ## License
 
-[License information to be added]
+MIT License — see `LICENSE` file for details.
 
 ## Links
 
-- **Documentation**: [docs.universo.pro](https://docs.universo.pro) (coming soon)
-- **React Implementation**: [universo-platformo-react](https://github.com/teknokomo/universo-platformo-react)
-- **Website**: [universo.pro](https://universo.pro) (coming soon)
+- **React reference**: [universo-platformo-react](https://github.com/teknokomo/universo-platformo-react)
+- **Documentation**: [docs.universo.pro](https://docs.universo.pro) *(coming soon)*
+- **Website**: [universo.pro](https://universo.pro) *(coming soon)*

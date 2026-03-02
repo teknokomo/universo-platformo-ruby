@@ -1,0 +1,14 @@
+/*
+ * Universo Platformo - Application Styles
+ * Uses Tailwind CSS via tailwindcss-rails gem
+ */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Custom utility: radial gradient for hero background */
+@layer utilities {
+  .bg-gradient-radial {
+    background: radial-gradient(ellipse 80% 50% at 50% -20%, hsla(210, 100%, 90%, 0.8), transparent);
+  }
+}
