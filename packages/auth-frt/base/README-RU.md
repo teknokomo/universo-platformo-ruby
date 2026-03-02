@@ -13,11 +13,19 @@
 
 ```
 base/
-├── controllers/auth/   # Auth::SessionsController (подключён из основного приложения)
-├── services/           # SupabaseAuthService интеграция с бэкендом
-├── views/auth/         # ERB шаблоны
-└── README.md
+├── README.md           # Документация пакета (EN)
+└── README-RU.md        # Документация пакета (RU)
 ```
+
+Код реализации находится в корневом Rails-приложении:
+
+| Путь в корневом `app/` | Описание |
+|------|---------|
+| `app/controllers/auth/sessions_controller.rb` | Auth::SessionsController (HTML-формы) |
+| `app/controllers/api/v1/auth_controller.rb` | JSON API для аутентификации |
+| `app/services/supabase_auth_service.rb` | SupabaseAuthService интеграция с бэкендом |
+| `app/views/auth/sessions/new.html.erb` | ERB шаблон формы входа |
+| `app/views/auth/sessions/sign_up.html.erb` | ERB шаблон формы регистрации |
 
 ## Страницы
 

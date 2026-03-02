@@ -24,12 +24,13 @@ built-in `Net::HTTP`. Credentials (`SUPABASE_URL`, `SUPABASE_KEY`) live only on 
 
 ### Package Structure
 
-Feature code lives in the `packages/` directory following a monorepo layout:
+The `packages/` directory contains documentation for each feature module.
+Implementation code lives in the root `app/` following standard Rails conventions:
 
 ```
 packages/
-├── start-frt/base/   # Guest and authenticated start pages
-└── auth-frt/base/    # Authentication UI (sign-in / sign-up)
+├── start-frt/base/   # Guest and authenticated start pages (docs)
+└── auth-frt/base/    # Authentication UI — sign-in / sign-up (docs)
 ```
 
 ### Application Layer (root `app/`)

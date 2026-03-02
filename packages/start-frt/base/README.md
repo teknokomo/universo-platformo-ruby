@@ -12,10 +12,17 @@ This package provides the start pages for the Universo Platformo application:
 
 ```
 base/
-├── controllers/      # StartController (mounted from main app)
-├── views/start/      # ERB templates
-└── README.md
+├── README.md           # Package documentation (EN)
+└── README-RU.md        # Package documentation (RU)
 ```
+
+The implementation code lives in the root Rails application:
+
+| Root `app/` path | Description |
+|------|---------|
+| `app/controllers/start_controller.rb` | StartController (root redirect + pages) |
+| `app/views/start/guest.html.erb` | Guest landing page ERB template |
+| `app/views/start/authenticated.html.erb` | Authenticated onboarding wizard ERB template |
 
 ## Pages
 

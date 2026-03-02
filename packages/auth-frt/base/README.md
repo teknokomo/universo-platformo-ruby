@@ -13,11 +13,19 @@ with Supabase integration via the Rails backend:
 
 ```
 base/
-├── controllers/auth/   # Auth::SessionsController (mounted from main app)
-├── services/           # SupabaseAuthService backend integration
-├── views/auth/         # ERB templates
-└── README.md
+├── README.md           # Package documentation (EN)
+└── README-RU.md        # Package documentation (RU)
 ```
+
+The implementation code lives in the root Rails application:
+
+| Root `app/` path | Description |
+|------|---------|
+| `app/controllers/auth/sessions_controller.rb` | Auth::SessionsController (HTML forms) |
+| `app/controllers/api/v1/auth_controller.rb` | JSON API for authentication |
+| `app/services/supabase_auth_service.rb` | SupabaseAuthService backend integration |
+| `app/views/auth/sessions/new.html.erb` | Sign-in form ERB template |
+| `app/views/auth/sessions/sign_up.html.erb` | Sign-up form ERB template |
 
 ## Pages
 

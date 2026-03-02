@@ -12,10 +12,17 @@
 
 ```
 base/
-├── controllers/      # StartController (подключён из основного приложения)
-├── views/start/      # ERB шаблоны
-└── README.md
+├── README.md           # Документация пакета (EN)
+└── README-RU.md        # Документация пакета (RU)
 ```
+
+Код реализации находится в корневом Rails-приложении:
+
+| Путь в корневом `app/` | Описание |
+|------|---------|
+| `app/controllers/start_controller.rb` | StartController (редирект с корня + страницы) |
+| `app/views/start/guest.html.erb` | ERB шаблон гостевой посадочной страницы |
+| `app/views/start/authenticated.html.erb` | ERB шаблон мастера онбординга |
 
 ## Страницы
 
