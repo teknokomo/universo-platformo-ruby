@@ -31,7 +31,7 @@ class ApplicationController < ActionController::Base
     unless user_signed_in?
       respond_to do |format|
         format.html { redirect_to auth_sign_in_path, alert: t('messages.error.unauthorized') }
-        format.json { render json: { error: 'Unauthorized' }, status: :unauthorized }
+        format.json { render json: { error: t('messages.error.unauthorized') }, status: :unauthorized }
       end
     end
   end

@@ -43,11 +43,11 @@ class SupabaseAuthService
       else
         error_message = extract_error(response[:body])
         Rails.logger.warn("[SupabaseAuthService] sign_in failed: #{error_message}")
-        { success: false, error: map_supabase_error(error_message) }
+        { success: false, error: map_supabase_error(error_message), status: :invalid_credentials }
       end
     rescue => e
       Rails.logger.error("[SupabaseAuthService] sign_in error: #{e.message}")
-      { success: false, error: I18n.t('auth.errors.service_unavailable') }
+      { success: false, error: I18n.t('auth.errors.service_unavailable'), status: :service_unavailable }
     end
 
     # Register a new user with email and password
@@ -77,11 +77,11 @@ class SupabaseAuthService
       else
         error_message = extract_error(response[:body])
         Rails.logger.warn("[SupabaseAuthService] sign_up failed: #{error_message}")
-        { success: false, error: map_supabase_error(error_message) }
+        { success: false, error: map_supabase_error(error_message), status: :validation_error }
       end
     rescue => e
       Rails.logger.error("[SupabaseAuthService] sign_up error: #{e.message}")
-      { success: false, error: I18n.t('auth.errors.service_unavailable') }
+      { success: false, error: I18n.t('auth.errors.service_unavailable'), status: :service_unavailable }
     end
 
     # Invalidate a user's access token (sign out on Supabase side)
@@ -97,11 +97,11 @@ class SupabaseAuthService
         { success: true }
       else
         Rails.logger.warn("[SupabaseAuthService] sign_out failed (status #{response[:status]})")
-        { success: false, error: I18n.t('auth.errors.sign_out_failed') }
+        { success: false, error: I18n.t('auth.errors.sign_out_failed'), status: :sign_out_failed }
       end
     rescue => e
       Rails.logger.error("[SupabaseAuthService] sign_out error: #{e.message}")
-      { success: false, error: I18n.t('auth.errors.service_unavailable') }
+      { success: false, error: I18n.t('auth.errors.service_unavailable'), status: :service_unavailable }
     end
 
     # Fetch user information for a given access token
@@ -117,11 +117,11 @@ class SupabaseAuthService
         user = response[:body]
         { success: true, user: { id: user['id'], email: user['email'] } }
       else
-        { success: false, error: I18n.t('auth.errors.invalid_token') }
+        { success: false, error: I18n.t('auth.errors.invalid_token'), status: :invalid_token }
       end
     rescue => e
       Rails.logger.error("[SupabaseAuthService] get_user error: #{e.message}")
-      { success: false, error: I18n.t('auth.errors.service_unavailable') }
+      { success: false, error: I18n.t('auth.errors.service_unavailable'), status: :service_unavailable }
     end
 
     private
@@ -131,7 +131,7 @@ class SupabaseAuthService
     end
 
     def unconfigured_error
-      { success: false, error: I18n.t('auth.errors.not_configured') }
+      { success: false, error: I18n.t('auth.errors.not_configured'), status: :not_configured }
     end
 
     def base_headers(access_token: nil)

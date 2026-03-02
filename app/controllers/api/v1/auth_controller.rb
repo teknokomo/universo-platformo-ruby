@@ -50,8 +50,13 @@ class Api::V1::AuthController < ApplicationController
         user: { id: result[:user][:id], email: result[:user][:email] }
       }
     else
+      http_status = case result[:status]
+                    when :service_unavailable then :service_unavailable
+                    when :not_configured then :internal_server_error
+                    else :unauthorized
+                    end
       render json: { error: result[:error] || I18n.t('auth.errors.sign_in_failed') },
-             status: :unauthorized
+             status: http_status
     end
   end
 
@@ -80,8 +85,13 @@ class Api::V1::AuthController < ApplicationController
         }, status: :created
       end
     else
+      http_status = case result[:status]
+                    when :service_unavailable then :service_unavailable
+                    when :not_configured then :internal_server_error
+                    else :unprocessable_entity
+                    end
       render json: { error: result[:error] || I18n.t('auth.errors.sign_up_failed') },
-             status: :unprocessable_entity
+             status: http_status
     end
   end
 
